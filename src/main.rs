@@ -9,13 +9,23 @@ fn main() {
 }
 
 // -------------------- Config coming from client side e.g. python--------------- //
+
 #[derive(Debug)]
 struct SimConfig {
     n_run: usize,
     timesteps: usize
 }
 
-fn update_box_A(s: &BTreeMap<&str, i32>) -> (&'static str, i32) {
+type State<'a> = BTreeMap<&'a str, i32>;
+// type Update = (&'static str, i32);
+
+#[derive(Debug)]
+struct Update {
+    key: &'static str,
+    value: i32
+}
+
+fn update_box_A(s: &State) -> Update {
     let mut add_to_A = 0;
     if s["box_A"] > s["box_B"] {
         add_to_A = -1;
@@ -25,10 +35,10 @@ fn update_box_A(s: &BTreeMap<&str, i32>) -> (&'static str, i32) {
     }
     let box_A = s["box_A"] + add_to_A;
 
-    ("box_A", box_A)
+    Update { key: "box_A", value: box_A}
 }
 
-fn update_box_B(s: &BTreeMap<&str, i32>) -> (&'static str, i32) {
+fn update_box_B(s: &State) -> Update {
     let mut add_to_B = 0;
     if s["box_B"] > s["box_A"] {
         add_to_B = -1;
@@ -38,15 +48,15 @@ fn update_box_B(s: &BTreeMap<&str, i32>) -> (&'static str, i32) {
     }
     let box_B = s["box_B"] + add_to_B;
 
-    ("box_B", box_B)
+    Update { key: "box_B", value: box_B}
 }
 
 // -------------------------- End of config -------------------------- //
 
-fn next_state(changes: Vec<(&str, i32)>) -> BTreeMap<&str, i32> {
+fn next_state(updates: Vec<Update>) -> State<'static> {
     let mut new_state = BTreeMap::new();
-    for ch in &changes {
-        new_state.insert(ch.0, ch.1);
+    for up in &updates {
+        new_state.insert(up.key, up.value);
     }
     new_state
 }
