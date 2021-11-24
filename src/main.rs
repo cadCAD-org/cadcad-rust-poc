@@ -49,7 +49,8 @@ type PolicyFunc<'a> = fn(&State) -> Signals<'a>;
 type Signals<'a> = BTreeMap<&'a str, i32>;
 
 #[derive(Debug)]
-struct SimConfig { n_run: usize,
+struct SimConfig { 
+    n_run: usize,
     timesteps: usize
 }
 
