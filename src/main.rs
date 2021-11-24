@@ -9,31 +9,11 @@ fn main() {
     run_simulation();
 
     println!("\n##################### END #####################\n\n\n\n");
+
+    // println!("--- xx: {:?}", xx);
 }
 
 // -------------------- Config coming from client side e.g. python--------------- //
-
-#[derive(Debug)]
-struct SimConfig {
-    n_run: usize,
-    timesteps: usize
-}
-
-type State<'a> = BTreeMap<&'a str, i32>;
-type UpdateFunc = fn(&State, &Signals) -> Update;
-type PolicyFunc<'a> = fn(&'a State) -> Signals<'a>;
-type Signals<'a> = BTreeMap<&'a str, i32>;
-
-struct StateKeyAndUpdateFn {
-    key: &'static str,
-    update_func: UpdateFunc
-}
-
-#[derive(Debug)]
-struct Update {
-    key: &'static str,
-    value: i32
-}
 
 // Policies
 fn robot_arm_behavior<'a>(s: &State) -> Signals<'a> {
@@ -62,6 +42,27 @@ fn update_box_B(s: &State, signals: &Signals) -> Update {
 }
 
 // -------------------------- End of config -------------------------- //
+
+type State<'a> = BTreeMap<&'a str, i32>;
+type UpdateFunc = fn(&State, &Signals) -> Update;
+type PolicyFunc<'a> = fn(&State) -> Signals<'a>;
+type Signals<'a> = BTreeMap<&'a str, i32>;
+
+#[derive(Debug)]
+struct SimConfig { n_run: usize,
+    timesteps: usize
+}
+
+struct StateKeyAndUpdateFn {
+    key: &'static str,
+    update_func: UpdateFunc
+}
+
+#[derive(Debug)]
+struct Update {
+    key: &'static str,
+    value: i32
+}
 
 fn run_simulation() {
     // -------------------- More client side config ---------------- //
