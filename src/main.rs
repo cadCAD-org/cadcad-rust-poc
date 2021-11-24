@@ -17,7 +17,7 @@ struct SimConfig {
 }
 
 type State<'a> = BTreeMap<&'a str, i32>;
-// type Update = (&'static str, i32);
+type UpdateFunc = fn(&State)->Update;
 
 #[derive(Debug)]
 struct Update {
@@ -53,19 +53,31 @@ fn update_box_B(s: &State) -> Update {
 
 // -------------------------- End of config -------------------------- //
 
-fn next_state(updates: Vec<Update>) -> State<'static> {
-    let mut new_state = BTreeMap::new();
-    for up in &updates {
-        new_state.insert(up.key, up.value);
-    }
-    new_state
-}
+// fn next_state_0(updates: Vec<Update>) -> State<'static> {
+//     let mut new_state = BTreeMap::new();
+//     for up in &updates {
+//         new_state.insert(up.key, up.value);
+//     }
+//     new_state
+// }
+
+// fn next_state<'a>(current_state: &'a State, mechanisms: &'a Vec<(&str, UpdateFunc)>) -> State<'a> {
+//     let mut new_state = State::new();
+//     for mech in mechanisms {
+//         new_state.insert(mech.0, mech.1(current_state).value);
+//     }
+//     new_state
+// }
 
 fn run_simulation() {
     let sim_config = SimConfig { n_run: 2, timesteps: 10 };
-    let init_state = BTreeMap::from([ ("box_A", 10), ("box_B", 0) ]);
-
-    for i in 0..sim_config.n_run {
+    let init_state = State::from([ ("box_A", 10), ("box_B", 0) ]);
+    let mechanisms: Vec<(&str, UpdateFunc)> = vec![
+        ("box_A", update_box_A),
+        ("box_B", update_box_B),
+    ];
+    
+    for i in 0..sim_config.n_run { // Simulation
         println!("--- \n Starting simulation {} ...", i);
 
         // 1. Display sim config and initial state
@@ -73,18 +85,18 @@ fn run_simulation() {
         println!("--- init_state: {:?}", init_state);
 
         // 2. Create result
-        let mut all_states = vec![init_state.clone()];
-        for i in 0..sim_config.timesteps {
-            let current_state = &all_states[i];
-            let up_A = update_box_A(&current_state);
-            let up_B = update_box_B(&current_state);
-            let next_state = next_state(vec![up_A, up_B]);
-            all_states.push(next_state);
+        let mut trajectory = vec![init_state.clone()];
+        for i in 0..sim_config.timesteps { // Experiment
+            let current_state = &trajectory[i];
+            let mut new_state = State::new();
+            for mech in &mechanisms {
+                new_state.insert(mech.0, mech.1(current_state).value);
+            }
+            trajectory.push(new_state);
         }
 
         // 3. Display result
-        for (i, s) in all_states.iter().enumerate() {
-        // for s in all_states {
+        for (i, s) in trajectory.iter().enumerate() {
             println!("--- step {}: {:?}", i, s);
         }
     }
