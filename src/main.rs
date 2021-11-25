@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 use std::{collections::BTreeMap, usize};
+use rand::Rng;
 
 fn main() {
     println!("\n##################### cadCAD.rs #####################\n");
@@ -16,29 +17,27 @@ fn main() {
 // -------------------- Config coming from client side e.g. python--------------- //
 
 // Policies
-fn robot_arm_behavior<'a>(s: &State) -> Signals<'a> {
-    let mut signals = Signals::new();
-    let mut add_to_A = 0;
-    if s["box_A"] > s["box_B"] {
-        add_to_A = -1;
-    }
-    else if s["box_A"] < s["box_B"] {
-        add_to_A = 1
-    }
-    signals.insert("add_to_A", add_to_A);
-    signals.insert("add_to_B", -add_to_A);
-    signals
+fn prey_policy(_s: &State) -> Signal {
+    let mut rng = rand::thread_rng();
+    let preys_change = rng.gen_range(-100..100);
+    Signal { key: "preys_change", value: preys_change }
+}
+
+fn predator_policy(_s: &State) -> Signal {
+    let mut rng = rand::thread_rng();
+    let predators_change = rng.gen_range(-10..10);
+    Signal { key: "predators_change", value: predators_change }
 }
 
 // State update fns
-fn update_box_A(s: &State, signals: &Signals) -> Update {
-    let box_A = s["box_A"] + signals["add_to_A"];
-    Update { key: "box_A", value: box_A}
+fn update_prey(s: &State, signals: &Signals) -> Update {
+    let preys = s["preys"] + signals["preys_change"];
+    Update { key: "preys", value: preys}
 }
 
-fn update_box_B(s: &State, signals: &Signals) -> Update {
-    let box_B = s["box_B"] + signals["add_to_B"];
-    Update { key: "box_B", value: box_B}
+fn update_predator(s: &State, signals: &Signals) -> Update {
+    let predators = s["predators"] + signals["predators_change"];
+    Update { key: "predators", value: predators }
 }
 
 // -------------------------- End of config -------------------------- //
@@ -65,16 +64,22 @@ struct Update {
     value: i32
 }
 
+#[derive(Debug)]
+struct Signal {
+    key: &'static str,
+    value: i32
+}
+
 fn run_simulation() {
     // -------------------- More client side config ---------------- //
     let sim_config = SimConfig { n_run: 1, timesteps: 10 };
-    let init_state = State::from([ ("box_A", 10), ("box_B", 0) ]);
-    let policyFns: Vec<PolicyFunc> = vec![
-        robot_arm_behavior,
+    let init_state = State::from([ ("preys", 1000), ("predators", 100) ]);
+    let policies = [
+        prey_policy, predator_policy
     ];    
     let state_key_and_update_func_s: Vec<StateKeyAndUpdateFn> = vec![
-        StateKeyAndUpdateFn { key: "box_A", update_func: update_box_A },
-        StateKeyAndUpdateFn { key: "box_B", update_func: update_box_B },
+        StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
+        StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
     ];
     // ------------------------------------------------------------ //
 
@@ -92,7 +97,12 @@ fn run_simulation() {
             let mut new_state = State::new();
 
             // a. Apply policies
-            let signals = robot_arm_behavior(current_state);
+            let mut signals = Signals::new();
+            for policy in &policies {
+                let signal = policy(current_state);
+                signals.insert(signal.key, signal.value);
+            }
+
             // b. Apply state update funcs
             for key_and_update_func in &state_key_and_update_func_s {
                 let update = (key_and_update_func.update_func)(current_state, &signals);
