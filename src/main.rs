@@ -17,26 +17,26 @@ fn main() {
 // -------------------- Config coming from client side e.g. python--------------- //
 
 // Policies
-fn prey_policy(_s: &State) -> Signal {
+fn prey_policy(s: &State) -> Signal {
     let mut rng = rand::thread_rng();
-    let preys_change = rng.gen_range(-100..100);
-    Signal { key: "preys_change", value: preys_change }
+    let preys_new = s["preys"] + rng.gen_range(-100..100);
+    Signal { key: "preys_new", value: preys_new }
 }
 
-fn predator_policy(_s: &State) -> Signal {
+fn predator_policy(s: &State) -> Signal {
     let mut rng = rand::thread_rng();
-    let predators_change = rng.gen_range(-10..10);
-    Signal { key: "predators_change", value: predators_change }
+    let predators_new = s["predators"] + rng.gen_range(-10..10);
+    Signal { key: "predators_new", value: predators_new }
 }
 
 // State update fns
-fn update_prey(s: &State, signals: &Signals) -> Update {
-    let preys = s["preys"] + signals["preys_change"];
+fn update_prey(_s: &State, signals: &Signals) -> Update {
+    let preys = signals["preys_new"];
     Update { key: "preys", value: preys}
 }
 
-fn update_predator(s: &State, signals: &Signals) -> Update {
-    let predators = s["predators"] + signals["predators_change"];
+fn update_predator(_s: &State, signals: &Signals) -> Update {
+    let predators = signals["predators_new"];
     Update { key: "predators", value: predators }
 }
 
@@ -76,7 +76,7 @@ fn run_simulation() {
     let init_state = State::from([ ("preys", 1000), ("predators", 100) ]);
     let policies = [
         prey_policy, predator_policy
-    ];    
+    ];
     let state_key_and_update_func_s: Vec<StateKeyAndUpdateFn> = vec![
         StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
         StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
