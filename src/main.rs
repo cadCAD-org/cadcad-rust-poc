@@ -91,10 +91,11 @@ fn run_simulation() {
     }
 }
 
-type State<'a> = BTreeMap<&'a str, i32>;
+type ValueType = i32;
+type State<'a> = BTreeMap<&'a str, ValueType>;
 type UpdateFunc = fn(&State, &Signals) -> Update;
 type PolicyFunc<'a> = fn(&State) -> Signals<'a>;
-type Signals<'a> = BTreeMap<&'a str, i32>;
+type Signals<'a> = BTreeMap<&'a str, ValueType>;
 
 #[derive(Debug)]
 struct SimConfig { 
@@ -110,12 +111,12 @@ struct StateKeyAndUpdateFn {
 #[derive(Debug)]
 struct Update {
     key: &'static str,
-    value: i32
+    value: ValueType
 }
 
 #[derive(Debug)]
 struct Signal {
     key: &'static str,
-    value: i32
+    value: ValueType
 }
 
