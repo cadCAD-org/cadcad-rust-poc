@@ -17,26 +17,26 @@ fn main() {
 // -------------------- Config coming from client side e.g. python--------------- //
 
 // Policies
-fn prey_policy(s: &State) -> Signal {
+fn prey_policy(_s: &State) -> Signal {
     let mut rng = rand::thread_rng();
-    let preys_new = s["preys"] + rng.gen_range(-100..100);
-    Signal { key: "preys_new", value: preys_new }
+    let preys_change = rng.gen_range(-100..100);
+    Signal { key: "preys_change", value: preys_change }
 }
 
-fn predator_policy(s: &State) -> Signal {
+fn predator_policy(_s: &State) -> Signal {
     let mut rng = rand::thread_rng();
-    let predators_new = s["predators"] + rng.gen_range(-10..10);
-    Signal { key: "predators_new", value: predators_new }
+    let predators_change = rng.gen_range(-10..10);
+    Signal { key: "predators_change", value: predators_change }
 }
 
 // State update fns
-fn update_prey(_s: &State, signals: &Signals) -> Update {
-    let preys = signals["preys_new"];
+fn update_prey(s: &State, signals: &Signals) -> Update {
+    let preys = s["preys"] + signals["preys_change"];
     Update { key: "preys", value: preys}
 }
 
-fn update_predator(_s: &State, signals: &Signals) -> Update {
-    let predators = signals["predators_new"];
+fn update_predator(s: &State, signals: &Signals) -> Update {
+    let predators = s["predators"] + signals["predators_change"];
     Update { key: "predators", value: predators }
 }
 
