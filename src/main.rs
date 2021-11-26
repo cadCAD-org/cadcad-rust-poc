@@ -5,11 +5,11 @@ use std::{collections::BTreeMap, usize};
 use rand::Rng;
 
 fn main() {
-    println!("\n##################### cadCAD.rs #####################\n");
+    println!("\n################## cadCAD.rs ##################\n");
 
     run_simulation();
 
-    println!("\n##################### END #####################\n\n\n\n");
+    println!("\n##################### END #####################\n\n\n");
 
     // println!("--- xx: {:?}", xx);
 }
@@ -42,38 +42,10 @@ fn update_predator(s: &State, signals: &Signals) -> Update {
 
 // -------------------------- End of config -------------------------- //
 
-type State<'a> = BTreeMap<&'a str, i32>;
-type UpdateFunc = fn(&State, &Signals) -> Update;
-type PolicyFunc<'a> = fn(&State) -> Signals<'a>;
-type Signals<'a> = BTreeMap<&'a str, i32>;
-
-#[derive(Debug)]
-struct SimConfig { 
-    n_run: usize,
-    timesteps: usize
-}
-
-struct StateKeyAndUpdateFn {
-    key: &'static str,
-    update_func: UpdateFunc
-}
-
-#[derive(Debug)]
-struct Update {
-    key: &'static str,
-    value: i32
-}
-
-#[derive(Debug)]
-struct Signal {
-    key: &'static str,
-    value: i32
-}
-
 fn run_simulation() {
     // -------------------- More client side config ---------------- //
-    let sim_config = SimConfig { n_run: 1, timesteps: 10 };
-    let init_state = State::from([ ("preys", 1000), ("predators", 100) ]);
+    let sim_config = SimConfig { n_run: 1, timesteps: 9 };
+    let init_state = State::from([ ("preys", 2000), ("predators", 200) ]);
     let policies = [
         prey_policy, predator_policy
     ];
@@ -117,5 +89,33 @@ fn run_simulation() {
             println!("--- step {}: State {:?}", i, s);
         }
     }
+}
+
+type State<'a> = BTreeMap<&'a str, i32>;
+type UpdateFunc = fn(&State, &Signals) -> Update;
+type PolicyFunc<'a> = fn(&State) -> Signals<'a>;
+type Signals<'a> = BTreeMap<&'a str, i32>;
+
+#[derive(Debug)]
+struct SimConfig { 
+    n_run: usize,
+    timesteps: usize
+}
+
+struct StateKeyAndUpdateFn {
+    key: &'static str,
+    update_func: UpdateFunc
+}
+
+#[derive(Debug)]
+struct Update {
+    key: &'static str,
+    value: i32
+}
+
+#[derive(Debug)]
+struct Signal {
+    key: &'static str,
+    value: i32
 }
 
