@@ -31,13 +31,13 @@ fn predator_policy(_s: &State) -> Signal {
 
 // State update fns
 fn update_prey(s: &State, signals: &Signals) -> Update {
-    let preys = s["preys"] + signals["preys_change"];
-    Update { key: "preys", value: preys}
+    let preys_new = s["preys"] + signals["preys_change"];
+    Update { key: "preys", value: preys_new}
 }
 
 fn update_predator(s: &State, signals: &Signals) -> Update {
-    let predators = s["predators"] + signals["predators_change"];
-    Update { key: "predators", value: predators }
+    let predators_new = s["predators"] + signals["predators_change"];
+    Update { key: "predators", value: predators_new }
 }
 
 // -------------------------- End of config -------------------------- //
