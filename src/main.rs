@@ -16,26 +16,30 @@ fn main() {
 
 // -------------------- Config coming from client side e.g. python--------------- //
 
+// Value Type
+type ValueType = i32;
+// type State_<'a> = State<'a, ValueType>;
+
 // Policies
-fn prey_policy(_s: &State) -> Signal {
+fn prey_policy(_s: &State<ValueType>) -> Signal<ValueType> {
     let mut rng = rand::thread_rng();
     let preys_change = rng.gen_range(-100..100);
     Signal { key: "preys_change", value: preys_change }
 }
 
-fn predator_policy(_s: &State) -> Signal {
+fn predator_policy(_s: &State<ValueType>) -> Signal<ValueType> {
     let mut rng = rand::thread_rng();
     let predators_change = rng.gen_range(-10..10);
     Signal { key: "predators_change", value: predators_change }
 }
 
 // State update fns
-fn update_prey(s: &State, signals: &Signals) -> Update {
+fn update_prey(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
     let preys_new = s["preys"] + signals["preys_change"];
     Update { key: "preys", value: preys_new}
 }
 
-fn update_predator(s: &State, signals: &Signals) -> Update {
+fn update_predator(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
     let predators_new = s["predators"] + signals["predators_change"];
     Update { key: "predators", value: predators_new }
 }
@@ -49,7 +53,7 @@ fn run_simulation() {
     let policies = [
         prey_policy, predator_policy
     ];
-    let state_key_and_update_func_s: Vec<StateKeyAndUpdateFn> = vec![
+    let state_key_and_update_func_s: Vec<StateKeyAndUpdateFn<ValueType>> = vec![
         StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
         StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
     ];
@@ -91,11 +95,10 @@ fn run_simulation() {
     }
 }
 
-type ValueType = i32;
-type State<'a> = BTreeMap<&'a str, ValueType>;
-type UpdateFunc = fn(&State, &Signals) -> Update;
-type PolicyFunc<'a> = fn(&State) -> Signals<'a>;
-type Signals<'a> = BTreeMap<&'a str, ValueType>;
+type State<'a, T> = BTreeMap<&'a str, T>;
+type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
+type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
+type Signals<'a, T> = BTreeMap<&'a str, T>;
 
 #[derive(Debug)]
 struct SimConfig { 
@@ -103,20 +106,19 @@ struct SimConfig {
     timesteps: usize
 }
 
-struct StateKeyAndUpdateFn {
+struct StateKeyAndUpdateFn<T> {
     key: &'static str,
-    update_func: UpdateFunc
+    update_func: UpdateFunc<T>
 }
 
 #[derive(Debug)]
-struct Update {
+struct Update<T> {
     key: &'static str,
-    value: ValueType
+    value: T
 }
 
 #[derive(Debug)]
-struct Signal {
+struct Signal<T> {
     key: &'static str,
-    value: ValueType
+    value: T
 }
-
