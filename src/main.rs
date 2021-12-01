@@ -1,6 +1,9 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
+#[macro_use]
+extern crate lazy_static;
+
 use std::{collections::BTreeMap, usize};
 use rand::Rng;
 
@@ -16,9 +19,11 @@ fn main() {
 
 // -------------------- Config coming from client side e.g. python--------------- //
 
+// Simulation Config.
+const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
+
 // Value Type
 type ValueType = i32;
-// type State_<'a> = State<'a, ValueType>;
 
 // Policies
 fn prey_policy(_s: &State<ValueType>) -> Signal<ValueType> {
@@ -44,43 +49,50 @@ fn update_predator(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update
     Update { key: "predators", value: predators_new }
 }
 
+// Init. State
+lazy_static! {
+    static ref INIT_STATE: State<'static, ValueType> = State::from(
+        [ ("preys", 2000), ("predators", 200) ]
+    );
+}
+
+// Mechanisms
+const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
+    prey_policy, predator_policy
+];
+
+const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
+    StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
+    StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
+];
+
 // -------------------------- End of config -------------------------- //
 
 fn run_simulation() {
-    // -------------------- More client side config ---------------- //
-    let sim_config = SimConfig { n_run: 1, timesteps: 9 };
-    let init_state = State::from([ ("preys", 2000), ("predators", 200) ]);
-    let policies = [
-        prey_policy, predator_policy
-    ];
-    let state_key_and_update_func_s: Vec<StateKeyAndUpdateFn<ValueType>> = vec![
-        StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
-        StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
-    ];
-    // ------------------------------------------------------------ //
 
-    for i in 0..sim_config.n_run { // Simulation
+    // todo: create final_data - vec of traj.s
+
+    for i in 0..SIM_CONFIG.n_run { // Simulation
         println!("--- \n Starting simulation {} ...", i);
 
-        // 1. Display sim config and initial state
-        println!("--- sim_config: {:?}", sim_config);
-        println!("--- init_state: {:?}", init_state);
+        // 1. Display sim. config.
+        println!("--- SIM_CONFIG: {:?}", SIM_CONFIG);
 
-        // 2. Create result
-        let mut trajectory = vec![init_state.clone()];
-        for i in 0..sim_config.timesteps { // Experiment
+        // 2. Create trajectory
+        let mut trajectory = vec![INIT_STATE.clone()];
+        for i in 0..SIM_CONFIG.timesteps { // Experiment
             let current_state = &trajectory[i];
             let mut new_state = State::new();
 
             // a. Apply policies
             let mut signals = Signals::new();
-            for policy in &policies {
+            for policy in POLICIES {
                 let signal = policy(current_state);
                 signals.insert(signal.key, signal.value);
             }
 
             // b. Apply state update funcs
-            for key_and_update_func in &state_key_and_update_func_s {
+            for key_and_update_func in STATE_KEY_AND_UPDATE_FUNC_S {
                 let update = (key_and_update_func.update_func)(current_state, &signals);
                 new_state.insert(update.key, update.value);
             }
