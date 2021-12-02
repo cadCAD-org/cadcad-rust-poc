@@ -5,7 +5,7 @@ use rand::Rng;
 use cadcad_rs::*;
 
 // Simulation Config.
-pub const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
+const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
 
 // Value Type
 type ValueType = i32;
@@ -36,17 +36,26 @@ fn update_predator(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update
 
 // Init. State
 lazy_static::lazy_static! {
-    pub static ref INIT_STATE: State<'static, ValueType> = State::from(
+    static ref INIT_STATE: State<'static, ValueType> = State::from(
         [ ("preys", 2000), ("predators", 200) ]
     );
 }
 
 // Mechanisms
-pub const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
+const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
     prey_policy, predator_policy
 ];
 
-pub const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
+const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
     StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
     StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
 ];
+
+lazy_static::lazy_static! {
+    pub static ref CADCAD_CONFIG: cadCADConfig<ValueType> = cadCADConfig {
+        sim_config: SIM_CONFIG,
+        init_state: (*INIT_STATE).clone(),
+        policies: POLICIES,
+        state_key_and_update_functions: STATE_KEY_AND_UPDATE_FUNC_S,
+    };
+}
