@@ -1,21 +1,30 @@
-extern crate libc;
+use std::{collections::BTreeMap, usize};
+extern crate lazy_static;
 
-use libc::size_t;
-use std::slice;
+pub type State<'a, T> = BTreeMap<&'a str, T>;
+pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
+pub type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
+pub type Signals<'a, T> = BTreeMap<&'a str, T>;
 
-// 1. Simple example
-#[no_mangle]
-pub extern "C" fn add(x: i32, y: i32) -> i32 {
-    x + y 
+#[derive(Debug)]
+pub struct SimConfig { 
+    pub n_run: usize,
+    pub timesteps: usize
 }
 
-// 2. Advanced example
-#[no_mangle]
-pub extern "C" fn sum_of_even(n: *const u32, len: size_t) -> u32 {
-    let numbers = unsafe {
-        assert!(!n.is_null());
-        slice::from_raw_parts(n, len as usize)
-    };
+pub struct StateKeyAndUpdateFn<T> {
+    pub key: &'static str,
+    pub update_func: UpdateFunc<T>
+}
 
-    numbers.iter().filter(|&v| v % 2 == 0).sum()
+#[derive(Debug)]
+pub struct Update<T> {
+    pub key: &'static str,
+    pub value: T
+}
+
+#[derive(Debug)]
+pub struct Signal<T> {
+    pub key: &'static str,
+    pub value: T
 }
