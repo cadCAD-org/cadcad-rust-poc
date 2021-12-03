@@ -37,7 +37,10 @@ fn update_predator(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update
 // Init. State
 lazy_static::lazy_static! {
     static ref INIT_STATE: State<'static, ValueType> = State::from(
-        [ ("preys", 2000.0), ("predators", 200.0) ]
+        [ 
+            ("preys", 2000.0), 
+            ("predators", 200.0) 
+        ]
     );
 }
 

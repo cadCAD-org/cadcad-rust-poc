@@ -1,6 +1,8 @@
 use std::{collections::BTreeMap, usize};
 extern crate lazy_static;
 
+// Todo: Remove unnecessary "pub"s later
+
 pub type State<'a, T> = BTreeMap<&'a str, T>;
 pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
 pub type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
@@ -74,5 +76,6 @@ pub fn run_simulation<T>(cadcad_config: &cadCADConfig<T>) where T: std::fmt::Deb
             println!("--- step {}: State {:?}", i, s);
         }
     }
-    println!("\n### End of project");
+    println!("\n### End of project\n");
+    println!("----------------------------------------------");
 }
