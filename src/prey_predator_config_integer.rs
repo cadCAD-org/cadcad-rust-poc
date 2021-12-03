@@ -52,7 +52,8 @@ const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &
 ];
 
 lazy_static::lazy_static! {
-    pub static ref CADCAD_CONFIG: cadCADConfig<ValueType> = cadCADConfig {
+    pub static ref CADCAD_CONFIG: cadCADConfig<ValueType> = cadCADConfig {        
+        name: "Prey predators integer",
         sim_config: SIM_CONFIG,
         init_state: (*INIT_STATE).clone(),
         policies: POLICIES,

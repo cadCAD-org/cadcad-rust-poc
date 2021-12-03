@@ -31,6 +31,7 @@ pub struct Signal<T> {
 
 #[allow(non_camel_case_types)]
 pub struct cadCADConfig <T: 'static> {
+    pub name: &'static str,
     pub sim_config: SimConfig,
     pub init_state: State<'static, T>,
     pub policies: &'static [for<'r, 's> fn(&'r State<T>) -> Signal<T>],
@@ -40,8 +41,9 @@ pub struct cadCADConfig <T: 'static> {
 pub fn run_simulation<T>(cadcad_config: &cadCADConfig<T>) where T: std::fmt::Debug + Clone {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
+    println!("\n### Project: {} ...", &cadcad_config.name);
     for i in 0..sim_config.n_run { // Simulation
-        println!("--- \n Starting simulation {} ...", i);
+        println!("\n--- \n Starting simulation {} ...", i);
         // 1. Display sim. config.
         println!("--- SIM_CONFIG: {:?}", sim_config);
 
@@ -72,4 +74,5 @@ pub fn run_simulation<T>(cadcad_config: &cadCADConfig<T>) where T: std::fmt::Deb
             println!("--- step {}: State {:?}", i, s);
         }
     }
+    println!("\n### End of project");
 }
