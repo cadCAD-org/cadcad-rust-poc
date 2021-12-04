@@ -11,13 +11,13 @@ const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
 type ValueType = i32;
 
 // Policies
-fn prey_policy(_s: &State<ValueType>) -> Signal<ValueType> {
+fn prey_change_normal_conditions(_s: &State<ValueType>) -> Signal<ValueType> {
     let mut random = rand::thread_rng();
     let preys_change = random.gen_range(-100..100);
     Signal { key: "preys_change", value: preys_change }
 }
 
-fn predator_policy(_s: &State<ValueType>) -> Signal<ValueType> {
+fn predator_change_normal_conditions(_s: &State<ValueType>) -> Signal<ValueType> {
     let mut random = rand::thread_rng();
     let predators_change = random.gen_range(-10..10);
     Signal { key: "predators_change", value: predators_change }
@@ -52,8 +52,8 @@ lazy_static::lazy_static! {
 
 // Mechanisms
 const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
-    prey_policy,
-    predator_policy,
+    prey_change_normal_conditions,
+    predator_change_normal_conditions,
     // predator_pandemic
 ];
 
