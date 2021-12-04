@@ -2,10 +2,10 @@ use std::{collections::{BTreeMap, HashMap}, usize};
 extern crate lazy_static;
 
 //// Improvements:
-// Todo: Remove unnecessary "pub"s
 // Todo: Pre-allocate memory before everything (e.g. n_run * timesteps * sizeof State)
+// Todo: Remove unnecessary "pub"s
 
-pub type State<'a, T> = BTreeMap<&'a str, T>; // HashMap will be used after dev. period
+pub type State<'a, T> = BTreeMap<&'a str, T>; // Use HashMap after dev. period
 pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
 pub type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
 pub type Signals<'a, T> = HashMap<&'a str, T>;
@@ -47,12 +47,15 @@ pub fn run_simulation<T>(
 ) where T: std::fmt::Debug + Clone + std::ops::AddAssign {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
+    println!("----------------------------------------------");
     println!("\n### Project: {} ...", &cadcad_config.name);
     for i in 0..sim_config.n_run { // Simulation
         println!("\n--- \n Starting simulation {} ...", i);
+        println!("---");
         // 1. Display sim. config.
         println!("--- SIM_CONFIG: {:?}", sim_config);
 
+        let now = std::time::Instant::now();
         // 2. Create trajectory
         let mut trajectory = vec![cadcad_config.init_state.clone()];
         for i in 0..sim_config.timesteps { // Experiment
@@ -79,12 +82,20 @@ pub fn run_simulation<T>(
 
             trajectory.push(new_state);
         }
+        let elapsed = now.elapsed();
+        println!("--- End of simulation {:?}", i);
 
-        // 3. Display result
+        // x. Stats
+        println!("--- Elapsed time: {:.2?}", elapsed);
+        let size_of_state = std::mem::size_of::<State<T>>();
+        println!("--- Size of State obj.: {:?}", size_of_state);
+        println!("--- Size of traj. obj.: {}", std::mem::size_of_val(&*trajectory));
+
+        // 3. Print trajectory
+        println!("--- Trajectory:");
         for (i, s) in trajectory.iter().enumerate() {
-            println!("--- step {}: State {:?}", i, s);
+            println!("---   step {}: State {:?}", i, s);
         }
     }
-    println!("\n### End of project\n");
-    println!("----------------------------------------------");
+    println!("\n----------------------END---------------------\n");
 }
