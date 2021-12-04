@@ -16,14 +16,14 @@ pub struct Foo {
 
 // Policies
 fn prey_policy(_s: &State<ValueType>) -> Signal<ValueType> {
-    let mut rng = rand::thread_rng();
-    let preys_change = rng.gen_range(-100..100);
+    let mut random = rand::thread_rng();
+    let preys_change = random.gen_range(-100..100);
     Signal { key: "preys_change", value: Foo { val: preys_change } }
 }
 
 fn predator_policy(_s: &State<ValueType>) -> Signal<ValueType> {
-    let mut rng = rand::thread_rng();
-    let predators_change = rng.gen_range(-10..10);
+    let mut random = rand::thread_rng();
+    let predators_change = random.gen_range(-10..10);
     Signal { key: "predators_change", value: Foo { val: predators_change } }
 }
 
@@ -50,7 +50,8 @@ lazy_static::lazy_static! {
 
 // Mechanisms
 const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
-    prey_policy, predator_policy
+    prey_policy,
+    predator_policy
 ];
 
 const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
