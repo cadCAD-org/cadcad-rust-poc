@@ -1,12 +1,14 @@
-use std::{collections::BTreeMap, usize};
+use std::{collections::{BTreeMap, HashMap}, usize};
 extern crate lazy_static;
 
-// Todo: Remove unnecessary "pub"s later
+//// Improvements:
+// Todo: Remove unnecessary "pub"s
+// Todo: Pre-allocate memory before everything (e.g. n_run * timesteps * sizeof State)
 
-pub type State<'a, T> = BTreeMap<&'a str, T>;
+pub type State<'a, T> = BTreeMap<&'a str, T>; // HashMap will be used after dev. period
 pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
 pub type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
-pub type Signals<'a, T> = BTreeMap<&'a str, T>;
+pub type Signals<'a, T> = HashMap<&'a str, T>;
 
 #[derive(Debug)]
 pub struct SimConfig { 
@@ -40,7 +42,9 @@ pub struct cadCADConfig <T: 'static> {
     pub state_key_and_update_functions: &'static [StateKeyAndUpdateFn<T>]
 }
 
-pub fn run_simulation<T>(cadcad_config: &cadCADConfig<T>) where T: std::fmt::Debug + Clone {
+pub fn run_simulation<T>(
+    cadcad_config: &cadCADConfig<T>
+) where T: std::fmt::Debug + Clone + std::ops::AddAssign {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
     println!("\n### Project: {} ...", &cadcad_config.name);
@@ -59,7 +63,12 @@ pub fn run_simulation<T>(cadcad_config: &cadCADConfig<T>) where T: std::fmt::Deb
             let mut signals = Signals::new();
             for policy in cadcad_config.policies {
                 let signal = policy(current_state);
-                signals.insert(signal.key, signal.value);
+                if let Some(mut_sig) = signals.get_mut(&signal.key) {
+                    *mut_sig += signal.value;
+                }                
+                else {
+                    signals.insert(signal.key, signal.value);
+                }
             }
 
             // b. Apply state update funcs

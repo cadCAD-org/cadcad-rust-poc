@@ -12,14 +12,20 @@ type ValueType = f64;
 
 // Policies
 fn prey_policy(_s: &State<ValueType>) -> Signal<ValueType> {
-    let mut rng = rand::thread_rng();
-    let preys_change = rng.gen_range(-100.0..100.0);
+    let mut random = rand::thread_rng();
+    let preys_change = random.gen_range(-100.0..100.0);
     Signal { key: "preys_change", value: preys_change }
 }
 
 fn predator_policy(_s: &State<ValueType>) -> Signal<ValueType> {
-    let mut rng = rand::thread_rng();
-    let predators_change = rng.gen_range(-10.0..10.0);
+    let mut random = rand::thread_rng();
+    let predators_change = random.gen_range(-10.0..10.0);
+    Signal { key: "predators_change", value: predators_change }
+}
+
+fn predator_pandemic(_s: &State<ValueType>) -> Signal<ValueType> {
+    let mut random = rand::thread_rng();
+    let predators_change = random.gen_range(-1000.0..-50.0);
     Signal { key: "predators_change", value: predators_change }
 }
 
@@ -46,7 +52,9 @@ lazy_static::lazy_static! {
 
 // Mechanisms
 const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
-    prey_policy, predator_policy
+    prey_policy,
+    predator_policy,
+    predator_pandemic
 ];
 
 const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
