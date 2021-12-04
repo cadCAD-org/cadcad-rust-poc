@@ -57,7 +57,7 @@ const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueTy
     predator_pandemic
 ];
 
-const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
+const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
     StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
     StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
 ];
@@ -68,6 +68,6 @@ lazy_static::lazy_static! {
         sim_config: SIM_CONFIG,
         init_state: (*INIT_STATE).clone(),
         policies: POLICIES,
-        state_key_and_update_functions: STATE_KEY_AND_UPDATE_FUNC_S,
+        state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS,
     };
 }

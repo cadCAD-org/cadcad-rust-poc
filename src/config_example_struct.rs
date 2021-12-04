@@ -3,15 +3,25 @@
 
 use rand::Rng;
 use cadcad_rs::*;
+use std::ops::AddAssign;
 
 // Simulation Config.
 const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
 
 // Value Type
 type ValueType = Foo;
+
 #[derive(Clone, Debug)]
 pub struct Foo {
     val: i32,
+}
+
+impl AddAssign for Foo {
+    fn add_assign(&mut self, other: Self) {
+        *self = Self {
+            val: self.val + other.val,
+        };
+    }
 }
 
 // Policies
@@ -54,7 +64,7 @@ const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueTy
     predator_policy
 ];
 
-const STATE_KEY_AND_UPDATE_FUNC_S: &'static [StateKeyAndUpdateFn<ValueType>] = &[
+const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
     StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
     StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
 ];
@@ -65,6 +75,6 @@ lazy_static::lazy_static! {
         sim_config: SIM_CONFIG,
         init_state: (*INIT_STATE).clone(),
         policies: POLICIES,
-        state_key_and_update_functions: STATE_KEY_AND_UPDATE_FUNC_S,
+        state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS,
     };
 }
