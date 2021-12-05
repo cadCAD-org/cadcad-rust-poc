@@ -36,7 +36,7 @@ Example output:
 #### HashMap vs BTreeMap test - with config_prey_predator_integer.rs (ver. 5-Dec-21):
 
 Summary:  
-Using BTreeMap State and Signal structs, we get the result with %38 less time.
+For this example where we have small sized State object, using BTreeMap for State and Signal structs, we get the result with %38 less time compared to using HashMap.
 
 ```
 
@@ -74,9 +74,3 @@ State::from([ ("preys", 2000), ("predators", 200), ] );
 --- Size of traj. obj.: 24_000_024
 ----------------------END---------------------
 ```
-
-
-
-
-
-
