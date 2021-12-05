@@ -1,8 +1,7 @@
 # cadcad-rust-poc
 Proof of Concept Rust Implementation of cadCAD
 
-
-### How to experiment 
+## How to experiment 
 git clone repo  
 `cd cadcad-rust-poc`  
 `cargo r`  
@@ -29,3 +28,55 @@ Example output:
 
 ##################### END #####################
 ```
+
+## Notes
+
+### Performance
+
+#### HashMap vs BTreeMap test - with config_prey_predator_integer.rs (ver. 5-Dec-21):
+
+Summary:  
+Using BTreeMap State and Signal structs, we get the result with %38 less time.
+
+```
+
+//// State obj.
+State::from([ ("preys", 2000), ("predators", 200), ] );
+
+//// Tests
+
+// Test 1 - Using "HashMap" for State and Signal structs
+
+----------------------------------------------
+### Project: Prey predators integer ...
+---
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000000 }
+--- End of simulation 0
+--- Elapsed time: 8.07s
+--- Size of State obj.: 48
+--- Size of traj. obj.: 48000048
+----------------------END---------------------
+
+// Test 2 - Using "BTreeMap" for State and Signal structs
+
+----------------------------------------------
+### Project: Prey predators integer ...
+
+---
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1_000_000 }
+--- End of simulation 0
+--- Elapsed time: 5.15s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 24_000_024
+----------------------END---------------------
+```
+
+
+
+
+
+
