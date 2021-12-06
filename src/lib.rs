@@ -1,14 +1,15 @@
-use std::{collections::{BTreeMap, HashMap}, usize};
+use std::{collections::{BTreeMap}, usize};
 extern crate lazy_static;
 
 //// Improvements:
 // Todo: Pre-allocate memory before everything (e.g. n_run * timesteps * sizeof State)
 // Todo: Remove unnecessary "pub"s
 
-pub type State<'a, T> = BTreeMap<&'a str, T>; // Use HashMap after dev. period
+// Todo: Consider HashMap later
+pub type State<'a, T> = BTreeMap<&'a str, T>;
 pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
 pub type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
-pub type Signals<'a, T> = HashMap<&'a str, T>;
+pub type Signals<'a, T> = BTreeMap<&'a str, T>;
 
 #[derive(Debug)]
 pub struct SimConfig { 
