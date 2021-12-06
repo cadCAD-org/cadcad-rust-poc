@@ -33,10 +33,103 @@ Example output:
 
 ### Performance
 
-#### HashMap vs BTreeMap test - with config_prey_predator_integer.rs (ver. 5-Dec-21):
+
+
+#### Y. Compared - with and without pre-allocation (6-Dec-21):
+
+Summary:  
+Pre-allocated case is slightly faster in avarage  
+
+Possible Next Actions: 
+- Test with real life sized State object
+
+State obj.:
+```
+    static ref INIT_STATE: State<'static, ValueType> = State::from(
+        [ 
+            ("preys",     Foo { val: 2000, dummy_val: 0.1 } ),
+            ("predators", Foo { val: 200 , dummy_val: 0.1 } )
+        ]
+    );
+```    
+
+a) Final data and Trajectory vectors NOT pre-allocated:  
+
+```
+### Project: Example w/ struct value ...
+
+---
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 3, timesteps: 500000 }
+--- End of simulation 0
+--- Elapsed time: 3.14s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 12000024
+
+---
+ Starting simulation 1 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 3, timesteps: 500000 }
+--- End of simulation 1
+--- Elapsed time: 3.08s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 12000024
+
+---
+ Starting simulation 2 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 3, timesteps: 500000 }
+--- End of simulation 2
+--- Elapsed time: 3.04s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 12000024
+
+----------------------END---------------------
+```
+
+b) Final data and Trajectory vectors pre-allocated:  
+
+```
+### Project: Example w/ struct value ...
+
+---
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 3, timesteps: 500000 }
+--- End of simulation 0
+--- Elapsed time: 3.03s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 12000024
+
+---
+ Starting simulation 1 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 3, timesteps: 500000 }
+--- End of simulation 1
+--- Elapsed time: 3.04s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 12000024
+
+---
+ Starting simulation 2 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 3, timesteps: 500000 }
+--- End of simulation 2
+--- Elapsed time: 3.03s
+--- Size of State obj.: 24
+--- Size of traj. obj.: 12000024
+
+----------------------END---------------------
+```
+#### Z. HashMap vs BTreeMap test - with config_prey_predator_integer.rs (5-Dec-21):
 
 Summary:  
 For this example where we have small sized State object, using BTreeMap for State and Signal structs, we get the result with %38 less time compared to using HashMap.
+
+Possible Next Actions: 
+- Test with real life sized State object
+- Try more efficient hash fns
 
 ```
 
