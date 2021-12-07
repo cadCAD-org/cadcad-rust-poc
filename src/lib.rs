@@ -8,7 +8,7 @@ extern crate lazy_static;
 // Todo: Consider HashMap later
 pub type State<'a, T> = BTreeMap<&'a str, T>;
 pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
-pub type PolicyFunc<'a, T> = fn(&State<T>) -> Signals<'a, T>;
+pub type PolicyFunc<T> = fn(&State<T>) -> Signal<T>;
 pub type Signals<'a, T> = BTreeMap<&'a str, T>;
 
 #[derive(Debug)]
@@ -35,12 +35,12 @@ pub struct Signal<T> {
 }
 
 #[allow(non_camel_case_types)]
-pub struct cadCADConfig <T: 'static> {
+pub struct cadCADConfig <'a, T: 'static> {
     pub name: &'static str,
     pub sim_config: SimConfig,
     pub init_state: State<'static, T>,
-    pub policies: &'static [for<'r, 's> fn(&'r State<T>) -> Signal<T>],
-    pub state_key_and_update_functions: &'static [StateKeyAndUpdateFn<T>]
+    pub policies: &'a [PolicyFunc<T>],
+    pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn<T>]
 }
 
 pub fn run_simulation<T>(
