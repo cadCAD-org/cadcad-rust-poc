@@ -5,6 +5,7 @@ mod config_prey_predator_integer;
 mod config_prey_predator_float;
 mod config_example_struct;
 mod config_example_struct_2;
+mod config_example_variadic;
 use cadcad_rs::run_simulation;
 
 fn main() {
@@ -14,6 +15,7 @@ fn main() {
     run_simulation(&config_prey_predator_float::CADCAD_CONFIG);
     run_simulation(&config_example_struct::CADCAD_CONFIG);
     run_simulation(&config_example_struct_2::CADCAD_CONFIG);
-
+    run_simulation(&config_example_variadic::CADCAD_CONFIG);
+    
     println!("\n######################### END #########################\n\n\n");
 }
