@@ -23,14 +23,14 @@ impl AddAssign for Value {
         match self {
             Self::I32(val) => {
                 match other {
-                    Self::I32(val2) => { *self = Self::I32(*val + val2) },
-                    Self::F64(_) => panic!("-- Mismatched underlying enum types"),
+                    Self::I32(val_other) => { *self = Self::I32(*val + val_other) },
+                    Self::F64(_) => panic!("-- Cannot add different enum types"),
                 }
             },
             Self::F64(val) => {
                 match other {
-                    Self::I32(_) => panic!("-- Mismatched underlying enum types"),
-                    Self::F64(val2) => { *self = Self::F64(*val + val2) }
+                    Self::I32(_) => panic!("-- Cannot add different enum types"),
+                    Self::F64(val_other) => { *self = Self::F64(*val + val_other) }
                 }                
             }
         };
@@ -44,14 +44,14 @@ impl Add for Value {
         return match self {
             Self::I32(val) => {
                 match other {
-                    Self::I32(val2) => Self::I32(val + val2),
-                    Self::F64(_) => panic!("-- Mismatched underlying enum types"),
+                    Self::I32(val_other) => Self::I32(val + val_other),
+                    Self::F64(_) => panic!("-- Cannot add different enum types"),
                 }
             },
             Self::F64(val) => {
                 match other {
-                    Self::I32(_) => panic!("-- Mismatched underlying enum types"),
-                    Self::F64(val2) => Self::F64(val + val2),
+                    Self::I32(_) => panic!("-- Cannot add different enum types"),
+                    Self::F64(val_other) => Self::F64(val + val_other),
                 }
             }
         };
