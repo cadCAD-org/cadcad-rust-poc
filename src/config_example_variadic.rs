@@ -12,7 +12,7 @@ const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
 // Value Type
 type ValueType = Value;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Value {
     I32(i32),
     F64(f64)
@@ -37,26 +37,26 @@ impl AddAssign for Value {
     }
 }
 
-// impl Add for Value {
-//     type Output = Self;
+impl Add for Value {
+    type Output = Self;
 
-//     fn add(self, other: Self) -> Self {
-//         return match self {
-//             Self::I32(val) => {
-//                 match other {
-//                     Self::I32(val2) => Self::I32(val + val2),
-//                     Self::F64(_) => panic!("-- Mismatched underlying enum types"),
-//                 }
-//             },
-//             Self::F64(val) => {
-//                 match other {
-//                     Self::I32(_) => panic!("-- Mismatched underlying enum types"),
-//                     Self::F64(val2) => Self::F64(val + val2),
-//                 }
-//             }
-//         };
-//     }
-// }
+    fn add(self, other: Self) -> Self {
+        return match self {
+            Self::I32(val) => {
+                match other {
+                    Self::I32(val2) => Self::I32(val + val2),
+                    Self::F64(_) => panic!("-- Mismatched underlying enum types"),
+                }
+            },
+            Self::F64(val) => {
+                match other {
+                    Self::I32(_) => panic!("-- Mismatched underlying enum types"),
+                    Self::F64(val2) => Self::F64(val + val2),
+                }
+            }
+        };
+    }
+}
 
 // Policies
 fn prey_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueType> {
@@ -79,29 +79,13 @@ fn predator_pandemic(_state: &State<ValueType>) -> Signal<ValueType> {
 
 // State update fns
 fn update_prey(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
-    let mut preys = 42;
-    if let Value::I32(val) = state["preys"] {
-        preys = val;
-    }
-    let mut preys_change = 42;
-    if let Value::I32(val) = signals["preys_change"] {
-        preys_change = val;
-    }
-    let preys_new = preys + preys_change;
-    Update { key: "preys", value: Value::I32(preys_new) }
+    let preys_new = state["preys"] + signals["preys_change"];
+    Update { key: "preys", value: preys_new }
 }
 
 fn update_predator(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
-    let mut predators = 44.0;
-    if let Value::F64(val) = state["predators"] {
-        predators = val;
-    }
-    let mut predators_change = 44.0;
-    if let Value::F64(val) = signals["predators_change"] {
-        predators_change = val;
-    }
-    let predators_new = predators + predators_change;        
-    Update { key: "predators", value: Value::F64(predators_new) }
+    let predators_new = state["predators"] + signals["predators_change"];
+    Update { key: "predators", value: predators_new }
 }
 
 // Init. State
