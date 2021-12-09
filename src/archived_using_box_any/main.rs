@@ -1,11 +1,13 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-mod config_prey_predator_integer;
-mod config_prey_predator_float;
-mod config_example_struct;
-mod config_example_struct_2;
-mod config_example_variadic_enum;
+// mod config_prey_predator_integer;
+mod config_prey_predator_integer_box_any;
+// mod config_prey_predator_float;
+// mod config_example_struct;
+// mod config_example_struct_2;
+// mod config_example_variadic_enum;
+// mod config_example_variadic_any;
 use cadcad_rs::run_simulation;
 
 fn main() {
@@ -15,7 +17,8 @@ fn main() {
     // run_simulation(&config_prey_predator_float::CADCAD_CONFIG);
     // run_simulation(&config_example_struct::CADCAD_CONFIG);
     // run_simulation(&config_example_struct_2::CADCAD_CONFIG);
-    run_simulation(&config_example_variadic_enum::CADCAD_CONFIG);
-    
+    // run_simulation(&config_example_variadic_enum::CADCAD_CONFIG);
+    run_simulation(&config_prey_predator_integer_box_any::CADCAD_CONFIG);
+
     println!("\n######################### END #########################\n\n\n");
 }
