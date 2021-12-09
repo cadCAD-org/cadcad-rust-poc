@@ -38,7 +38,7 @@ pub struct Signal<T> {
 pub struct cadCADConfig <'a, T: 'static> {
     pub name: &'static str,
     pub sim_config: SimConfig,
-    pub init_state: State<'static, T>,
+    pub init_state: &'a State<'static, T>,
     pub policies: &'a [PolicyFunc<T>],
     pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn<T>]
 }
