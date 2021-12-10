@@ -127,7 +127,7 @@ const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
 ];
 
 lazy_static::lazy_static! {
-    pub static ref CADCAD_CONFIG: cadCADConfig<'static, ValueType> = cadCADConfig {        
+    pub static ref CADCAD_CONFIG: cadCADConfig<'static, ValueType> = cadCADConfig {
         name: "Variadic w/ Enum: Int, Float, Struct state keys",
         sim_config: SIM_CONFIG,
         init_state: &INIT_STATE,
