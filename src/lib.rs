@@ -107,86 +107,100 @@ pub fn run_simulation<T>(
     println!("\n----------------------END---------------------\n");
 }
 
-// -------------------------------------------------------------------------- //
 
-use pyo3::prelude::*;
-use pyo3::types::*;
 
-#[pymodule]
-fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
 
-    #[pyfn(m)]
-    fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-        Ok((a + b + 10).to_string())
-    }
 
-    #[pyfn(m)]
-    fn double(x: usize) -> usize {
-        x * 2
-    }
 
-    // --------------------------
 
-    // Value Type
-    type ValueType = i32;
-    // Policies
-    use rand::Rng;
-    pub fn prey_change_normal_conditions(_s: &State<ValueType>) -> Signal<ValueType> {
-        let mut random = rand::thread_rng();
-        let preys_change = random.gen_range(-100..100);
-        Signal { key: "preys_change".to_string(), value: preys_change }
-    }
-    // State update fns
-    fn update_prey(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
-        let preys_new = s["preys"] + signals["preys_change"];
-        Update { key: "preys".to_string(), value: preys_new}
-    }
-    // Mechanisms
-    const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
-        prey_change_normal_conditions,
-        // predator_change_normal_conditions,
-        // predator_pandemic
-    ];
 
-    const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
-        StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
-        // StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
-    ];    
+// ----------------------------------- pyo3 ---------------------------------- //
 
-    fn get_i32(dic: &PyDict, key: &str) -> i32 {
-        dic.get_item(key).unwrap().downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
-    }
+
+
+
+
+
+
+
+// use pyo3::prelude::*;
+// use pyo3::types::*;
+
+// #[pymodule]
+// fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
+
+//     #[pyfn(m)]
+//     fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
+//         Ok((a + b + 10).to_string())
+//     }
+
+//     #[pyfn(m)]
+//     fn double(x: usize) -> usize {
+//         x * 2
+//     }
+
+//     // --------------------------
+
+//     // Value Type
+//     type ValueType = i32;
+//     // Policies
+//     use rand::Rng;
+//     pub fn prey_change_normal_conditions(_s: &State<ValueType>) -> Signal<ValueType> {
+//         let mut random = rand::thread_rng();
+//         let preys_change = random.gen_range(-100..100);
+//         Signal { key: "preys_change".to_string(), value: preys_change }
+//     }
+//     // State update fns
+//     fn update_prey(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
+//         let preys_new = s["preys"] + signals["preys_change"];
+//         Update { key: "preys".to_string(), value: preys_new}
+//     }
+//     // Mechanisms
+//     const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
+//         prey_change_normal_conditions,
+//         // predator_change_normal_conditions,
+//         // predator_pandemic
+//     ];
+
+//     const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
+//         StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
+//         // StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
+//     ];    
+
+//     fn get_i32(dic: &PyDict, key: &str) -> i32 {
+//         dic.get_item(key).unwrap().downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
+//     }
     
-    #[pyfn(m)]
-    fn run_simulation_rs(
-        name: String,
-        sim_config_py: &PyDict,
-        init_state_py: &PyDict
-    ) -> PyResult<i32> {
-        let sim_config = SimConfig { 
-            n_run: get_i32(sim_config_py, "N") as usize,
-            timesteps: get_i32(sim_config_py, "T") as usize
-        };
+//     #[pyfn(m)]
+//     fn run_simulation_rs(
+//         name: String,
+//         sim_config_py: &PyDict,
+//         init_state_py: &PyDict
+//     ) -> PyResult<i32> {
+//         let sim_config = SimConfig { 
+//             n_run: get_i32(sim_config_py, "N") as usize,
+//             timesteps: get_i32(sim_config_py, "T") as usize
+//         };
 
-        let mut init_state = State::new();
-        for e in init_state_py.iter() {
-            let key = e.0.downcast::<PyString>().unwrap().extract::<String>().unwrap();
-            let val = e.1.downcast::<PyInt>().unwrap().extract::<i32>().unwrap();
-            init_state.insert(key, val);
-        }
+//         let mut init_state = State::new();
+//         for e in init_state_py.iter() {
+//             let key = e.0.downcast::<PyString>().unwrap().extract::<String>().unwrap();
+//             let val = e.1.downcast::<PyInt>().unwrap().extract::<i32>().unwrap();
+//             init_state.insert(key, val);
+//         }
 
-        let cadcad_config = cadCADConfig {
-            name,
-            sim_config,
-            init_state: &init_state,
-            policies: POLICIES,
-            state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS,
-        };
+//         let cadcad_config = cadCADConfig {
+//             name,
+//             sim_config,
+//             init_state: &init_state,
+//             policies: POLICIES,
+//             state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS,
+//         };
 
-        run_simulation(&cadcad_config);
+//         run_simulation(&cadcad_config);
 
-        Ok(42)
-    }
+//         Ok(42)
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
