@@ -1,4 +1,5 @@
 use std::{collections::{BTreeMap}, usize};
+use std::ops::Add;
 extern crate lazy_static;
 
 //// Improvements:
@@ -45,7 +46,7 @@ pub struct cadCADConfig <'a, T: 'static> {
 
 pub fn run_simulation<T>(
     cadcad_config: &cadCADConfig<T>
-) where T: std::fmt::Debug + Clone + std::ops::AddAssign {
+) where T: std::fmt::Debug + Clone + Copy + std::ops::Add + Add<Output = T> {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
     println!("----------------------------------------------");
@@ -68,7 +69,7 @@ pub fn run_simulation<T>(
             for policy in cadcad_config.policies {
                 let signal = policy(current_state);
                 if let Some(mut_sig) = signals.get_mut(&signal.key) {
-                    *mut_sig += signal.value;
+                    *mut_sig = *mut_sig + signal.value;
                 }                
                 else {
                     signals.insert(signal.key, signal.value);

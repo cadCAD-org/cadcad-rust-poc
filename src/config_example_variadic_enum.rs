@@ -4,7 +4,6 @@
 use rand::Rng;
 use cadcad_rs::*;
 use std::ops::Add;
-use std::ops::AddAssign;
 
 // Simulation Config.
 const SIM_CONFIG: SimConfig = SimConfig { n_run: 1, timesteps: 9 };
@@ -15,25 +14,19 @@ type ValueType = Value;
 #[derive(Debug, Clone, Copy)]
 pub enum Value {
     I32(i32),
-    F64(f64)
+    F64(f64),
+    FOO(Foo),
 }
 
-impl AddAssign for Value {
-    fn add_assign(&mut self, other: Self) {
-        match self {
-            Self::I32(val) => {
-                match other {
-                    Self::I32(val_other) => { *self = Self::I32(*val + val_other) },
-                    Self::F64(_) => panic!("-- Cannot add different enum types"),
-                }
-            },
-            Self::F64(val) => {
-                match other {
-                    Self::I32(_) => panic!("-- Cannot add different enum types"),
-                    Self::F64(val_other) => { *self = Self::F64(*val + val_other) }
-                }                
-            }
-        };
+#[derive(Clone, Debug, Copy)]
+pub struct Foo {
+    count: i32,
+}
+
+impl Add for Foo {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Self { count: self.count + other.count }
     }
 }
 
@@ -46,12 +39,21 @@ impl Add for Value {
                 match other {
                     Self::I32(val_other) => Self::I32(val + val_other),
                     Self::F64(_) => panic!("-- Cannot add different enum types"),
+                    Self::FOO(_) => panic!("-- Cannot add different enum types"),
                 }
             },
             Self::F64(val) => {
                 match other {
                     Self::I32(_) => panic!("-- Cannot add different enum types"),
                     Self::F64(val_other) => Self::F64(val + val_other),
+                    Self::FOO(_) => panic!("-- Cannot add different enum types"),                                    
+                }
+            }
+            Self::FOO(val) => {
+                match other {
+                    Self::I32(_) => panic!("-- Cannot add different enum types"),
+                    Self::F64(_) => panic!("-- Cannot add different enum types"),
+                    Self::FOO(val_other) => Self::FOO(val + val_other),
                 }
             }
         };
@@ -71,6 +73,12 @@ fn predator_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueT
     Signal { key: "predators_change", value: Value::F64(predators_change) }
 }
 
+fn foo_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueType> {
+    let mut random = rand::thread_rng();
+    let foo_change = random.gen_range(-10..10);
+    Signal { key: "foo_change", value: Value::FOO(Foo { count: foo_change }) }
+}
+
 fn predator_pandemic(_state: &State<ValueType>) -> Signal<ValueType> {
     let mut random = rand::thread_rng();
     let predators_change = random.gen_range(-1000.0..-50.0);
@@ -88,12 +96,18 @@ fn update_predator(state: &State<ValueType>, signals: &Signals<ValueType>) -> Up
     Update { key: "predators", value: predators_new }
 }
 
+fn update_foo(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
+    let foo_new = state["foo"] + signals["foo_change"];
+    Update { key: "foo", value: foo_new }
+}
+
 // Init. State
 lazy_static::lazy_static! {
     static ref INIT_STATE: State<'static, ValueType> = State::from(
         [
             ("preys",     Value::I32(2000)),
             ("predators", Value::F64(200.0)),
+            ("foo",       Value::FOO(Foo { count: 500 })),
         ]
     );
 }
@@ -102,17 +116,19 @@ lazy_static::lazy_static! {
 const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
     prey_change_normal_conditions,
     predator_change_normal_conditions,
-    // predator_pandemic
+    // predator_pandemic,
+    foo_change_normal_conditions,
 ];
 
 const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
     StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
     StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
+    StateKeyAndUpdateFn { key: "foo", update_func: update_foo },
 ];
 
 lazy_static::lazy_static! {
     pub static ref CADCAD_CONFIG: cadCADConfig<'static, ValueType> = cadCADConfig {        
-        name: "Prey predators integer",
+        name: "Variadic w/ Enum: Int, Float, Struct state keys",
         sim_config: SIM_CONFIG,
         init_state: &INIT_STATE,
         policies: POLICIES,
