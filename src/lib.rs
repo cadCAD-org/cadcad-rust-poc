@@ -222,6 +222,15 @@ pub fn run_simulation<T>(
 //         any.downcast::<PyString>().unwrap().extract::<String>().unwrap()
 //     }
 
+//     fn to_value_i32(any: &PyAny) -> Value { Value::I32(to_i32(any)) }
+//     fn to_value_f64(any: &PyAny) -> Value { Value::F64(to_f64(any)) }
+ 
+//     type ToValueFn = for<'r> fn(&'r pyo3::PyAny) -> Value;
+//     static PY_TO_RUST: phf::Map<&'static str, ToValueFn> = phf::phf_map! {
+//         "<class 'int'>"   => to_value_i32,
+//         "<class 'float'>" => to_value_f64,
+//     };
+
 //     #[pyfn(m)]
 //     fn run_simulation_rs(
 //         name: String,
@@ -234,14 +243,11 @@ pub fn run_simulation<T>(
 //         };
 
 //         let mut init_state = State::new();
-//         for e in init_state_py.iter() {
-//             let key = to_string(e.0);
-//             let val_type = e.1.get_type().to_string();
-//             let val = if val_type == "<class 'int'>" {
-//                 Value::I32(to_i32(e.1))
-//             } else if val_type == "<class 'float'>" {
-//                 Value::F64(to_f64(e.1))
-//             } else { panic!(" --- Err: Unknown state value type ") };
+//         for key_val in init_state_py.iter() {
+//             let key = to_string(key_val.0);
+//             let val_type = key_val.1.get_type().to_string();
+//             let val = PY_TO_RUST.get(val_type.as_str())
+//                 .expect("Unsupported python type")(key_val.1);
 //             init_state.insert(key, val);
 //         }
 
