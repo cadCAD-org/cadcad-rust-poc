@@ -10,8 +10,8 @@ sim_config = {
 }
 
 init_state = {
-    'preys': 2000,
-    # 'box_B': 2,
+    'preys'    : 2000,
+    'predators':  200.0,
 }
 
 cadcad_rs.run_simulation_rs(

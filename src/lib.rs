@@ -139,38 +139,77 @@ pub fn run_simulation<T>(
 //         x * 2
 //     }
 
-//     // --------------------------
+// // --------------------------
+
+//     use rand::Rng;
 
 //     // Value Type
-//     type ValueType = i32;
+//     type ValueType = Value;
+
+//     #[derive(Debug, Clone, Copy)]
+//     pub enum Value {
+//         I32(i32),
+//         F64(f64),
+//     }
+
+//     impl Add for Value {
+//         type Output = Self;
+//         fn add(self, other: Self) -> Self {
+//             // println!("--- other: {:?}", other);
+//             return match self {
+//                 Self::I32(val) => {
+//                     match other {
+//                         Self::I32(val_other) => Self::I32(val + val_other),
+//                         Self::F64(_) => panic!("-- Cannot add different enum types"),
+//                     }
+//                 },
+//                 Self::F64(val) => {
+//                     match other {
+//                         Self::I32(_) => panic!("-- Cannot add different enum types"),
+//                         Self::F64(val_other) => Self::F64(val + val_other),
+//                     }
+//                 }
+//             };
+//         }
+//     }
+    
 //     // Policies
-//     use rand::Rng;
-//     pub fn prey_change_normal_conditions(_s: &State<ValueType>) -> Signal<ValueType> {
+//     fn prey_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueType> {
 //         let mut random = rand::thread_rng();
 //         let preys_change = random.gen_range(-100..100);
-//         Signal { key: "preys_change".to_string(), value: preys_change }
+//         Signal { key: "preys_change".to_string(), value: Value::I32(preys_change) }
+//     }
+
+//     fn predator_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueType> {
+//         let mut random = rand::thread_rng();
+//         let predators_change = random.gen_range(-10.0..10.0);
+//         Signal { key: "predators_change".to_string(), value: Value::F64(predators_change) }
 //     }
 //     // State update fns
-//     fn update_prey(s: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
-//         let preys_new = s["preys"] + signals["preys_change"];
-//         Update { key: "preys".to_string(), value: preys_new}
+//     fn update_prey(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
+//         let preys_new = state["preys"] + signals["preys_change"];
+//         Update { key: "preys".to_string(), value: preys_new }
+//     }
+
+//     fn update_predator(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
+//         let predators_new = state["predators"] + signals["predators_change"];
+//         Update { key: "predators".to_string(), value: predators_new }
 //     }
 //     // Mechanisms
 //     const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
 //         prey_change_normal_conditions,
-//         // predator_change_normal_conditions,
-//         // predator_pandemic
+//         predator_change_normal_conditions,
 //     ];
 
 //     const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
 //         StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
-//         // StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
+//         StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
 //     ];    
 
 //     fn get_i32(dic: &PyDict, key: &str) -> i32 {
 //         dic.get_item(key).unwrap().downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
 //     }
-    
+
 //     #[pyfn(m)]
 //     fn run_simulation_rs(
 //         name: String,
@@ -185,7 +224,12 @@ pub fn run_simulation<T>(
 //         let mut init_state = State::new();
 //         for e in init_state_py.iter() {
 //             let key = e.0.downcast::<PyString>().unwrap().extract::<String>().unwrap();
-//             let val = e.1.downcast::<PyInt>().unwrap().extract::<i32>().unwrap();
+//             let val_type = e.1.get_type().to_string();
+//             let val = if val_type == "<class 'int'>" {
+//                 Value::I32(e.1.downcast::<PyInt>().unwrap().extract::<i32>().unwrap())
+//             } else if val_type == "<class 'float'>" {
+//                 Value::F64(e.1.downcast::<PyFloat>().unwrap().extract::<f64>().unwrap())
+//             } else { panic!(" --- Err: Unknown state value type ") };
 //             init_state.insert(key, val);
 //         }
 
