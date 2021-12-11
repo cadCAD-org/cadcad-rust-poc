@@ -207,7 +207,19 @@ pub fn run_simulation<T>(
 //     ];    
 
 //     fn get_i32(dic: &PyDict, key: &str) -> i32 {
-//         dic.get_item(key).unwrap().downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
+//         to_i32(dic.get_item(key).unwrap())
+//     }
+
+//     fn to_i32(any: &PyAny) -> i32 {
+//         any.downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
+//     }
+    
+//     fn to_f64(any: &PyAny) -> f64 {
+//         any.downcast::<PyFloat>().unwrap().extract::<f64>().unwrap()
+//     }
+
+//     fn to_string(any: &PyAny) -> String {
+//         any.downcast::<PyString>().unwrap().extract::<String>().unwrap()
 //     }
 
 //     #[pyfn(m)]
@@ -223,12 +235,12 @@ pub fn run_simulation<T>(
 
 //         let mut init_state = State::new();
 //         for e in init_state_py.iter() {
-//             let key = e.0.downcast::<PyString>().unwrap().extract::<String>().unwrap();
+//             let key = to_string(e.0);
 //             let val_type = e.1.get_type().to_string();
 //             let val = if val_type == "<class 'int'>" {
-//                 Value::I32(e.1.downcast::<PyInt>().unwrap().extract::<i32>().unwrap())
+//                 Value::I32(to_i32(e.1))
 //             } else if val_type == "<class 'float'>" {
-//                 Value::F64(e.1.downcast::<PyFloat>().unwrap().extract::<f64>().unwrap())
+//                 Value::F64(to_f64(e.1))
 //             } else { panic!(" --- Err: Unknown state value type ") };
 //             init_state.insert(key, val);
 //         }
