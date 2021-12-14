@@ -264,5 +264,12 @@ pub fn run_simulation<T>(
 //         Ok(42)
 //     }
 
+//     #[pyfn(m)]
+//     fn f1(any: &PyAny) {
+//         let pyfn = any.downcast::<PyFunction>().unwrap();
+//         println!("--- pyfn(): {:?}", pyfn.call1( (1,4) ));
+//     }
+
+
 //     Ok(())
 // }
