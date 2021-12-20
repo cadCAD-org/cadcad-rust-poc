@@ -9,12 +9,43 @@ extern crate lazy_static;
 // Todo: Pre-allocate memory before everything (e.g. n_run * timesteps * sizeof State)
 // Todo: Remove unnecessary "pub"s
 
+// State Value Type
+type ValueType = Value;
+
+#[derive(Debug, Clone, Copy)]
+pub enum Value {
+    I32(i32),
+    F64(f64),
+}
+
+impl Add for Value {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        // println!("--- other: {:?}", other);
+        return match self {
+            Self::I32(val) => {
+                match other {
+                    Self::I32(val_other) => Self::I32(val + val_other),
+                    Self::F64(_) => panic!("-- Cannot add different enum types"),
+                }
+            },
+            Self::F64(val) => {
+                match other {
+                    Self::I32(_) => panic!("-- Cannot add different enum types"),
+                    Self::F64(val_other) => Self::F64(val + val_other),
+                }
+            }
+        };
+    }
+}
+
+// Type Defs.
+type StringType = String; // todo: remove
 // Todo: Consider HashMap later
-type StringType = String;
-pub type State<'a, T> = BTreeMap<StringType, T>;
-pub type UpdateFunc<T> = fn(&State<T>, &Signals<T>) -> Update<T>;
-pub type PolicyFunc<T> = fn(&State<T>) -> Signal<T>;
-pub type Signals<'a, T> = BTreeMap<StringType, T>;
+pub type State = BTreeMap<StringType, ValueType>;
+pub type UpdateFunc = fn(&State, &Signals) -> Update;
+pub type PolicyFunc = fn(&State) -> Signal;
+pub type Signals = BTreeMap<StringType, ValueType>;
 
 #[derive(Debug)]
 pub struct SimConfig { 
@@ -22,35 +53,33 @@ pub struct SimConfig {
     pub timesteps: usize
 }
 
-pub struct StateKeyAndUpdateFn<T> {
+pub struct StateKeyAndUpdateFn {
     pub key: &'static str,
-    pub update_func: UpdateFunc<T>
+    pub update_func: UpdateFunc
 }
 
 #[derive(Debug)]
-pub struct Update<T> {
+pub struct Update {
     pub key: StringType,
-    pub value: T
+    pub value: ValueType
 }
 
 #[derive(Debug)]
-pub struct Signal<T> {
+pub struct Signal {
     pub key: StringType,
-    pub value: T
+    pub value: ValueType
 }
 
 #[allow(non_camel_case_types)]
-pub struct cadCADConfig <'a, T: 'static> {
+pub struct cadCADConfig<'a> {
     pub name: StringType,
     pub sim_config: SimConfig,
-    pub init_state: &'a State<'static, T>,
-    pub policies: &'a [PolicyFunc<T>],
-    pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn<T>]
+    pub init_state: State,
+    pub policies: &'a [PolicyFunc],
+    pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn]
 }
 
-pub fn run_simulation<T>(
-    cadcad_config: &cadCADConfig<T>
-) where T: std::fmt::Debug + Clone + Copy + std::ops::Add + Add<Output = T> {
+pub fn run_simulation(cadcad_config: &cadCADConfig) {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
     println!("----------------------------------------------");
@@ -93,7 +122,7 @@ pub fn run_simulation<T>(
 
         // x. Stats
         println!("--- Elapsed time: {:.2?}", elapsed);
-        let size_of_state = std::mem::size_of::<State<T>>();
+        let size_of_state = std::mem::size_of::<State>();
         println!("--- Size of State obj.: {:?}", size_of_state);
         println!("--- Size of traj. obj.: {}", std::mem::size_of_val(&*trajectory));
 
@@ -109,15 +138,7 @@ pub fn run_simulation<T>(
 
 
 
-
-
-
-
 // ----------------------------------- pyo3 ---------------------------------- //
-
-
-
-
 
 
 
@@ -128,79 +149,37 @@ use pyo3::types::*;
 #[pymodule]
 fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
 
-    #[pyfn(m)]
-    fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-        Ok((a + b + 10).to_string())
-    }
-
-    #[pyfn(m)]
-    fn double(x: usize) -> usize {
-        x * 2
-    }
-
-// --------------------------
-
     use rand::Rng;
-
-    // Value Type
-    type ValueType = Value;
-
-    #[derive(Debug, Clone, Copy)]
-    pub enum Value {
-        I32(i32),
-        F64(f64),
-    }
-
-    impl Add for Value {
-        type Output = Self;
-        fn add(self, other: Self) -> Self {
-            // println!("--- other: {:?}", other);
-            return match self {
-                Self::I32(val) => {
-                    match other {
-                        Self::I32(val_other) => Self::I32(val + val_other),
-                        Self::F64(_) => panic!("-- Cannot add different enum types"),
-                    }
-                },
-                Self::F64(val) => {
-                    match other {
-                        Self::I32(_) => panic!("-- Cannot add different enum types"),
-                        Self::F64(val_other) => Self::F64(val + val_other),
-                    }
-                }
-            };
-        }
-    }
     
     // Policies
-    fn prey_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueType> {
+    fn prey_change_normal_conditions(_state: &State) -> Signal {
         let mut random = rand::thread_rng();
         let preys_change = random.gen_range(-100..100);
         Signal { key: "preys_change".to_string(), value: Value::I32(preys_change) }
     }
 
-    fn predator_change_normal_conditions(_state: &State<ValueType>) -> Signal<ValueType> {
+    fn predator_change_normal_conditions(_state: &State) -> Signal {
         let mut random = rand::thread_rng();
         let predators_change = random.gen_range(-10.0..10.0);
         Signal { key: "predators_change".to_string(), value: Value::F64(predators_change) }
     }
     // State update fns
-    fn update_prey(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
+    fn update_prey(state: &State, signals: &Signals) -> Update {
         let preys_new = state["preys"] + signals["preys_change"];
         Update { key: "preys".to_string(), value: preys_new }
     }
 
-    fn update_predator(state: &State<ValueType>, signals: &Signals<ValueType>) -> Update<ValueType> {
+    fn update_predator(state: &State, signals: &Signals) -> Update {
         let predators_new = state["predators"] + signals["predators_change"];
         Update { key: "predators".to_string(), value: predators_new }
     }
     // Mechanisms
-    const POLICIES: &'static [for<'r, 's> fn(&'r State<ValueType>) -> Signal<ValueType>] = &[
+    const POLICIES: &'static [for<'r, 's> fn(&'r State) -> Signal] = &[
         prey_change_normal_conditions,
         predator_change_normal_conditions,
     ];
 
-    const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn<ValueType>] = &[
+    const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn] = &[
         StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
         StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
     ];    
@@ -253,7 +232,7 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
         let cadcad_config = cadCADConfig {
             name,
             sim_config,
-            init_state: &init_state,
+            init_state,
             policies: POLICIES,
             state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS,
         };

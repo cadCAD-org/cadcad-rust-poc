@@ -1,10 +1,8 @@
 import cadcad_rs
-print(cadcad_rs.sum_as_string(1, 2))
-print(cadcad_rs.double(4))
 
 ##
 sim_config = {
-    'T': 5,  # timesteps
+    'T': 7,  # timesteps
     'N': 1,   # times the simulation will be run (Monte Carlo runs)
 }
 
