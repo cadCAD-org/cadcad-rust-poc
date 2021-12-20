@@ -137,8 +137,9 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
 
             // a. Apply policies
             let mut signals = Signals::new();
-            for policy in &cadcad_config.policies {
-                // let signal = policy(current_state); // Rs
+            // for policy in cadcad_config.policies { // Rs
+            //     let signal = policy(current_state); // Rs
+            for policy in &cadcad_config.policies { // Py
                 let signal = call_py_policy(policy); // Py
                 if let Some(mut_sig) = signals.get_mut(&signal.key) {
                     *mut_sig = *mut_sig + signal.value;
