@@ -17,7 +17,7 @@ cadcad_rs.run_simulation_rs(
   "config from python",
   sim_config,
   init_state
-))
+)
 
 ## Call this fn from Rust
 def foo(x, y):
