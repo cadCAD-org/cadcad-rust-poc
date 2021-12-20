@@ -1,4 +1,4 @@
-import cadcad_rs
+import cadcad_rs, random
 
 ##
 sim_config = {
@@ -11,15 +11,21 @@ init_state = {
     'predators':  200.0,
 }
 
+# Policies
+def prey_change_normal_conditions():
+    return ( "preys_change", random.randint(-200, 200) )
+
+def predator_change_normal_conditions():
+    return ( "predators_change", random.uniform(-10.0, 10.0) )   
+
+policies = [
+    prey_change_normal_conditions, 
+    predator_change_normal_conditions
+]
+
 cadcad_rs.run_simulation_rs(
   "config from python",
   sim_config,
-  init_state
+  init_state,
+  policies
 )
-
-## Call this fn from Rust
-def foo(x, y):
-    print("--- foo() from python")
-    return x+y
-cadcad_rs.f1(foo)
-
