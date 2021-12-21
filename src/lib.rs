@@ -43,6 +43,7 @@ impl Add for Value {
 type StringType = String; // todo: remove
 // Todo: Consider HashMap later
 pub type State = BTreeMap<StringType, ValueType>;
+pub type Trajectory = Vec<State>;
 pub type UpdateFunc = fn(&State, &Signals) -> Update;
 // pub type PolicyFunc = fn(&State) -> Signal; // Rs
 pub type PolicyFunc<'a> = &'a PyAny; // Py
@@ -78,7 +79,8 @@ pub struct cadCADConfig<'a> {
     pub init_state: State,
     // pub policies: &'a [PolicyFunc], // Rs
     pub policies: Vec<PolicyFunc<'a>>, // Py
-    pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn]
+    pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn],
+    pub print_trajectory: bool,
 }
 
 pub fn call_py_policy(pol: &PyAny) -> Signal {
@@ -116,6 +118,13 @@ static PY_TO_RUST: phf::Map<&'static str, ToValueFn> = phf::phf_map! {
     "<class 'int'>"   => to_value_i32,
     "<class 'float'>" => to_value_f64,
 };
+
+fn print_trajectory(trajectory: &Trajectory) {
+    println!("--- Trajectory:");
+    for (i, state) in trajectory.iter().enumerate() {
+        println!("---   step {}: State {:?}", i, state);
+    }
+}
 
 pub fn run_simulation(cadcad_config: &cadCADConfig) {
     // todo: create final_data - vec of traj.s
@@ -167,10 +176,10 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
         println!("--- Size of traj. obj.: {}", std::mem::size_of_val(&*trajectory));
 
         // 3. Print trajectory
-        println!("--- Trajectory:");
-        for (i, s) in trajectory.iter().enumerate() {
-            println!("---   step {}: State {:?}", i, s);
+        if cadcad_config.print_trajectory {
+            print_trajectory(&trajectory);
         }
+
     }
     println!("\n----------------------END---------------------\n");
 }
@@ -197,7 +206,7 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
         sim_config_py: &PyDict,
         init_state_py: &PyDict,
         policies_py: &PyList,
-
+        print_trajectory: &PyBool
     ) -> PyResult<i32> {
         let sim_config = SimConfig { 
             n_run: get_i32(sim_config_py, "N") as usize,
@@ -225,6 +234,7 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
             // policies: POLICIES, // Rs
             policies, // Py
             state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS,
+            print_trajectory: print_trajectory.is_true(),
         };
 
         run_simulation(&cadcad_config);

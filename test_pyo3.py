@@ -23,9 +23,12 @@ policies = [
     predator_change_normal_conditions
 ]
 
+print_trajectory = bool(0)
+
 cadcad_rs.run_simulation_rs(
   "config from python",
   sim_config,
   init_state,
-  policies
+  policies,
+  print_trajectory
 )
