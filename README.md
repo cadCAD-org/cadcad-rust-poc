@@ -33,9 +33,114 @@ Example output:
 
 ### Performance
 
+#### A. Policies defined on Py side & called from Rust vs. both defined & called on Rust side
+
+Summary:  
+When the policies defined and called on the Rust side, it takes ~2x less time to complete a simulation.
+
+// Test-1) using SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
+
+i) Py - policies defined in Py side, called from Rust
+```
+----------------------------------------------
+--- 
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
+--- End of simulation 0
+--- Elapsed time: 2.13ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 2424
+
+--- 
+ Starting simulation 1 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
+--- End of simulation 1
+--- Elapsed time: 1.84ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 2424
+
+----------------------END---------------------
+```
+
+ii) Rs - both defined and called on Rust side
+```
+----------------------------------------------
+--- 
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
+--- End of simulation 0
+--- Elapsed time: 1.09ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 2424
+
+--- 
+ Starting simulation 1 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
+--- End of simulation 1
+--- Elapsed time: 999.85µs
+--- Size of State obj.: 24
+--- Size of traj. obj.: 2424
+
+----------------------END---------------------
+```
 
 
-#### Y. Compared - with and without pre-allocation (6-Dec-21):
+// Test-2) using SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
+
+i) Py - policies defined in Py side, called from Rust
+```
+----------------------------------------------
+--- 
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
+--- End of simulation 0
+--- Elapsed time: 17.94ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 24024
+
+--- 
+ Starting simulation 1 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
+--- End of simulation 1
+--- Elapsed time: 17.75ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 24024
+
+----------------------END---------------------
+```
+
+ii) Rs - both defined and called on Rust side
+```
+----------------------------------------------
+--- 
+ Starting simulation 0 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
+--- End of simulation 0
+--- Elapsed time: 9.09ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 24024
+
+--- 
+ Starting simulation 1 ...
+---
+--- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
+--- End of simulation 1
+--- Elapsed time: 9.57ms
+--- Size of State obj.: 24
+--- Size of traj. obj.: 24024
+
+----------------------END---------------------
+```
+
+
+#### B. Compared - with and without pre-allocation (6-Dec-21):
 
 Summary:  
 Pre-allocated case is slightly faster in avarage  
@@ -122,7 +227,7 @@ b) Final data and Trajectory vectors pre-allocated:
 
 ----------------------END---------------------
 ```
-#### Z. HashMap vs BTreeMap test - with config_prey_predator_integer.rs (5-Dec-21):
+#### C. HashMap vs BTreeMap test - with config_prey_predator_integer.rs (5-Dec-21):
 
 Summary:  
 For this example where we have small sized State object, using BTreeMap for State and Signal structs, we get the result with %38 less time compared to using HashMap.
