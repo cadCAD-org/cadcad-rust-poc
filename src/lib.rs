@@ -43,6 +43,7 @@ impl Add for Value {
 type StringType = String; // todo: remove
 // Todo: Consider HashMap later
 pub type State = BTreeMap<StringType, ValueType>;
+pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
 pub type Trajectory = Vec<State>;
 pub type UpdateFunc = fn(&State, &Signals) -> Update;
 // pub type PolicyFunc = fn(&State) -> Signal; // Rs
@@ -83,9 +84,9 @@ pub struct cadCADConfig<'a> {
     pub print_trajectory: bool,
 }
 
-pub fn call_py_policy(pol: &PyAny) -> Signal {
+pub fn call_py_policy(pol: &PyAny, current_state_py: StatePy) -> Signal {
     let pyfn = pol.downcast::<PyFunction>().unwrap();
-    let res = pyfn.call0().unwrap().downcast::<PyTuple>().unwrap();
+    let res = pyfn.call1((current_state_py, 0)).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(res.get_item(0).unwrap());
     let val = res.get_item(1).unwrap();
     let val_type = val.get_type().to_string();
@@ -149,7 +150,16 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
             // for policy in cadcad_config.policies { // Rs
             //     let signal = policy(current_state); // Rs
             for policy in &cadcad_config.policies { // Py
-                let signal = call_py_policy(policy); // Py
+                let mut current_state_py = StatePy::new();
+                Python::with_gil(|py| {
+                    for (key, val) in current_state {
+                        match  val { 
+                            Value::I32(i) => current_state_py.insert(key, i.to_object(py)), 
+                            Value::F64(f) => current_state_py.insert(key, f.to_object(py)),
+                        };
+                    }
+                });
+                let signal = call_py_policy(policy, current_state_py); // Py
                 if let Some(mut_sig) = signals.get_mut(&signal.key) {
                     *mut_sig = *mut_sig + signal.value;
                 }                

@@ -12,10 +12,15 @@ init_state = {
 }
 
 # Policies
-def prey_change_normal_conditions():
-    return ( "preys_change", random.randint(-200, 200) )
+def prey_change_normal_conditions(state, y):
+    max_preys = 3000
+    preys =  state['preys']
+    # Assuming: preys_change goes down with every iteration since 
+    # natural resources are limits it to max_preys 
+    preys_change = random.randint(0, max_preys-preys) if preys < max_preys else 0
+    return ( "preys_change", preys_change )
 
-def predator_change_normal_conditions():
+def predator_change_normal_conditions(state, y):
     return ( "predators_change", random.uniform(-10.0, 10.0) )   
 
 policies = [
@@ -23,7 +28,7 @@ policies = [
     predator_change_normal_conditions
 ]
 
-print_trajectory = bool(0)
+print_trajectory = bool(1)
 
 cadcad_rs.run_simulation_rs(
   "config from python",
