@@ -251,11 +251,24 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
 
         Ok(42)
     }
+
+    // ---------- User config in Rust
     
+    // Params
+    const MAX_PREYS: i32 = 3000;
+
     // Policies
-    fn prey_change_normal_conditions(_state: &State) -> Signal {
+    fn prey_change_normal_conditions(state: &State) -> Signal {
+        let mut preys: i32 = 0;
+        if let Value::I32(value) = state["preys"] {
+            preys = value;
+        }
+        // Assuming: preys_change goes down with every iteration since
+        // natural resources limits the number of preys to MAX_PREYS
+        let preys_change = if preys < MAX_PREYS {
         let mut random = rand::thread_rng();
-        let preys_change = random.gen_range(-100..100);
+            random.gen_range(0..MAX_PREYS-preys) 
+        } else {0};
         Signal { key: "preys_change".to_string(), value: Value::I32(preys_change) }
     }
 
@@ -286,6 +299,8 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
         StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
         StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
     ];
+
+    // ---------- end of User config in Rust
 
     Ok(())
 }
