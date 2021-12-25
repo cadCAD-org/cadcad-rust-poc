@@ -159,7 +159,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
                         };
                     }
                 });
-                let signal = call_py_policy(policy, current_state_py); // Py
+                let signal = call_py_policy(policy, current_state_py); // Py end
                 if let Some(mut_sig) = signals.get_mut(&signal.key) {
                     *mut_sig = *mut_sig + signal.value;
                 }                
