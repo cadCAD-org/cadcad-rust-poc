@@ -224,11 +224,11 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
         };
 
         let mut init_state = State::new();
-        for key_val in init_state_py.iter() {
-            let key = to_string(key_val.0);
-            let val_type = key_val.1.get_type().to_string();
+        for (key, val) in init_state_py.iter() {
+            let key = to_string(key);
+            let val_type = val.get_type().to_string();
             let val = PY_TO_RUST.get(val_type.as_str())
-                .expect("Unsupported python type")(key_val.1);
+                .expect("Unsupported python type")(val);
             init_state.insert(key, val);
         }
         
