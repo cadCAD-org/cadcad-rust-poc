@@ -9,7 +9,7 @@ seeds = {
 }
 
 sim_config = config_sim({
-    'T': range(100000), # number of discrete iterations in each experiement
+    'T': range(100_000), # number of discrete iterations in each experiement
     'N': 1, # number of times the simulation will be run (Monte Carlo runs)
 })
 

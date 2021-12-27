@@ -7,6 +7,9 @@ sim_config = {
 }
 
 ##
+print_trajectory = bool(0)
+
+##
 init_state = {
     'preys'    : 2000,
     'predators':  200.0,
@@ -30,9 +33,6 @@ policies = [
     prey_change_normal_conditions, 
     predator_change_normal_conditions
 ]
-
-##
-print_trajectory = bool(1)
 
 ##
 cadcad_rs.run_simulation_rs(
