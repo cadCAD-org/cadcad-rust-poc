@@ -40,16 +40,17 @@ policies = [
 ]
 
 # SUFS/Mechanisms
-def update_prey(s, _input):
-    preys = s['preys'] + _input['preys_change']
+def update_prey(state, signals):
+    preys = state['preys'] + signals['preys_change']
     return ('preys', preys)
 
-def update_predator(s, _input):
-    predators = s['predators'] + _input['predators_change']
+def update_predator(state, signals):
+    predators = state['predators'] + signals['predators_change']
     return ('predators', predators)
 
 state_update_fns = [
-    update_prey, update_predator
+    update_prey,
+    update_predator
 ]
 
 ## Loop

@@ -34,6 +34,20 @@ policies = [
     predator_change_normal_conditions
 ]
 
+# SUFS/Mechanisms
+def update_prey(state, signals):
+    preys = state['preys'] + signals['preys_change']
+    return ('preys', preys)
+
+def update_predator(state, signals):
+    predators = state['predators'] + signals['predators_change']
+    return ('predators', predators)
+
+state_update_fns = [
+    update_prey,
+    update_predator
+]
+
 ##
 start = time.process_time()
 ##
@@ -42,6 +56,7 @@ cadcad_rs.run_simulation_rs(
   sim_config,
   init_state,
   policies,
+  state_update_fns,
   print_trajectory
 )
 ##
