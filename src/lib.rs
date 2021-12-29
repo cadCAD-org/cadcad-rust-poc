@@ -141,8 +141,8 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
         let now = std::time::Instant::now();
         // 2. Create trajectory
         let mut trajectory = vec![cadcad_config.init_state.clone()];
-        for i in 0..sim_config.timesteps { // Experiment
-            let current_state = &trajectory[i];
+        for k in 0..sim_config.timesteps { // Experiment
+            let current_state = &trajectory[k];
             let mut new_state = State::new();
 
             // a. Apply policies

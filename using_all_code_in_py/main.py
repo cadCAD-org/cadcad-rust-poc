@@ -48,13 +48,11 @@ state_update_fns = [
 ]
 
 ## Loop
-print("Sim. config:", sim_config)
+print("\n### Sim. config:", sim_config)
 trajectory = [init_state]
-for i in range(sim_config['N']):
-    print(i)
-
+for i in range(sim_config['N']): # Simulation
     start = time.process_time()
-    for k in range(sim_config['T']):
+    for k in range(sim_config['T']): # Experiment
         current_state = trajectory[k]
 
         signals = {}
@@ -70,7 +68,7 @@ for i in range(sim_config['N']):
         trajectory.append(new_state)
 
     end = time.process_time()
-    print(end - start, "sec(s)")
+    print("### Experiment took", end - start, "sec(s)\n")
 
 ##
 if print_trajectory:
