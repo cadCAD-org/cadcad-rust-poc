@@ -3,6 +3,7 @@ import random, time
 ##
 sim_config = {
     'T': 100_000,  # timesteps
+    # 'T': 10,  # timesteps
     'N': 1,   # times the simulation will be run (Monte Carlo runs)
 }
 
@@ -24,14 +25,18 @@ def prey_change_normal_conditions(state):
     # Assuming: preys_change goes down with every iteration since
     # natural resources limits the number of preys to MAX_PREYS 
     preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
-    return ( { "preys_change": preys_change })
+    return ( "preys_change", preys_change )
+
+def prey_migration(state):
+    return ( "preys_change", random.randint(1000, 1010) )
 
 def predator_change_normal_conditions(state):
-    return ( { "predators_change": random.uniform(-10.0, 10.0) } )
+    return ( "predators_change", random.uniform(-10.0, 10.0) )
 
 policies = [
     prey_change_normal_conditions, 
-    predator_change_normal_conditions
+    predator_change_normal_conditions,
+    # prey_migration,
 ]
 
 # SUFS/Mechanisms
@@ -58,8 +63,12 @@ for i in range(sim_config['N']): # Simulation
         signals = {}
         for pol in policies:
             signal = pol(current_state)
-            signals.update(signal)
-        
+            key, val = signal
+            if key in signals.keys():
+                signals[key] = val + signals[key]
+            else:
+                signals[key] = val
+
         new_state = {}
         for state_updat_fn in state_update_fns:
             update = state_updat_fn(current_state, signals)
