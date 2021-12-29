@@ -10,8 +10,6 @@ extern crate lazy_static;
 // Todo: Remove unnecessary "pub"s
 
 // State Value Type
-type ValueType = Value;
-
 #[derive(Debug, Clone, Copy)]
 pub enum Value {
     I32(i32),
@@ -21,7 +19,6 @@ pub enum Value {
 impl Add for Value {
     type Output = Self;
     fn add(self, other: Self) -> Self {
-        // println!("--- other: {:?}", other);
         return match self {
             Self::I32(val) => {
                 match other {
@@ -40,15 +37,14 @@ impl Add for Value {
 }
 
 // Type Defs.
-type StringType = String; // todo: remove
 // Todo: Consider HashMap later
-pub type State = BTreeMap<StringType, ValueType>;
+pub type State = BTreeMap<String, Value>;
 pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
 pub type Trajectory = Vec<State>;
 pub type UpdateFunc = fn(&State, &Signals) -> Update;
 // pub type PolicyFunc = fn(&State) -> Signal; // Rs
 pub type PolicyFunc<'a> = &'a PyAny; // Py
-pub type Signals = BTreeMap<StringType, ValueType>;
+pub type Signals = BTreeMap<String, Value>;
 
 #[derive(Debug)]
 pub struct SimConfig { 
@@ -63,19 +59,19 @@ pub struct StateKeyAndUpdateFn {
 
 #[derive(Debug)]
 pub struct Update {
-    pub key: StringType,
-    pub value: ValueType
+    pub key: String,
+    pub value: Value
 }
 
 #[derive(Debug)]
 pub struct Signal {
-    pub key: StringType,
-    pub value: ValueType
+    pub key: String,
+    pub value: Value
 }
 
 #[allow(non_camel_case_types)]
 pub struct cadCADConfig<'a> {
-    pub name: StringType,
+    pub name: String,
     pub sim_config: SimConfig,
     pub init_state: State,
     // pub policies: &'a [PolicyFunc], // Rs
