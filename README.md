@@ -4,143 +4,93 @@ Proof of Concept Rust Implementation of cadCAD
 ## How to experiment 
 git clone repo  
 `cd cadcad-rust-poc`  
-`cargo r`  
+// todo
 
-Example output:
+## Performance
+
+### A. Perf. comparison of different implementations of cadCAD (29-Dec-21)
+
+Simualtion config. summary:   
+(more details below)
 ```
-##################### cadCAD.rs #####################
-
----
- Starting simulation 0 ...
---- sim_config: SimConfig { n_run: 1, timesteps: 10 }
---- init_state: {"predators": 100, "preys": 1000}
---- step 0: State {"predators": 100, "preys": 1000}
---- step 1: State {"predators": 101, "preys": 1075}
---- step 2: State {"predators": 97, "preys": 1123}
---- step 3: State {"predators": 90, "preys": 1086}
---- step 4: State {"predators": 99, "preys": 1083}
---- step 5: State {"predators": 105, "preys": 1156}
---- step 6: State {"predators": 99, "preys": 1221}
---- step 7: State {"predators": 105, "preys": 1173}
---- step 8: State {"predators": 103, "preys": 1217}
---- step 9: State {"predators": 111, "preys": 1244}
---- step 10: State {"predators": 113, "preys": 1166}
-
-##################### END #####################
+SimConfig { n_run: 1, timesteps: 100_000 }
+init_state = {
+  'preys'    : 2000,
+  'predators':  200.0,
+}
 ```
 
-## Notes
+#### 1. Pure Rust (cadCAD.rs as app)
+92ms  
 
-### Performance
+#### 2. Pure python (my simple python impl.)
+285ms  
+- All user config and run simulation loop are in Python  
 
-#### A. Policies defined on Py side & called from Rust vs. both defined & called on Rust side
 
-**Summary:**  
-When the policies defined and called on the Rust side, it takes ~2x less time to complete a simulation.
+#### 3. cadCAD.rs as library
+962ms  
+- All user config (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
+- Py policies/state update fns are called back from Rust  
 
-Test-1) using SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
 
-i) Py - policies defined in Py side, called from Rust
+#### 4. Using cadCAD python package
+12sec  
+ 
+
+#### User config. used in performance tests above
+
+```py
+##
+sim_config = {
+	'T': 100000,  # timesteps
+	'N': 1,   # times the simulation will be run (Monte Carlo runs)
+}
+
+##
+init_state = {
+	'preys'    : 2000,
+	'predators':  200.0,
+}
+
+## Params
+MAX_PREYS = 3000
+
+## Policies
+def prey_change_normal_conditions(state):
+	preys =  state['preys']
+	# Assuming: preys_change goes down with every iteration since
+	# natural resources limits the number of preys to MAX_PREYS 
+	preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
+	return ( { "preys_change": preys_change } )
+
+def predator_change_normal_conditions(state):
+	return ( { "predators_change": random.uniform(-10.0, 10.0) } )
+
+# SUFS/Mechanisms
+def update_prey(s, _input):
+	preys = s['preys'] + _input['preys_change']
+	return ('preys', preys)
+
+def update_predator(s, _input):
+	predators = s['predators'] + _input['predators_change']
+	return ('predators', predators) 
+```   
+	
+Sample trajectory:		
 ```
-----------------------------------------------
---- 
- Starting simulation 0 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
---- End of simulation 0
---- Elapsed time: 2.13ms
---- Size of State obj.: 24
---- Size of traj. obj.: 2424
-
---- 
- Starting simulation 1 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
---- End of simulation 1
---- Elapsed time: 1.84ms
---- Size of State obj.: 24
---- Size of traj. obj.: 2424
-
-----------------------END---------------------
-```
-
-ii) Rs - both defined and called on Rust side
-```
-----------------------------------------------
---- 
- Starting simulation 0 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
---- End of simulation 0
---- Elapsed time: 1.09ms
---- Size of State obj.: 24
---- Size of traj. obj.: 2424
-
---- 
- Starting simulation 1 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 100 }
---- End of simulation 1
---- Elapsed time: 999.85µs
---- Size of State obj.: 24
---- Size of traj. obj.: 2424
-
-----------------------END---------------------
-```
-
-
-Test-2) using SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
-
-i) Py - policies defined in Py side, called from Rust
-```
-----------------------------------------------
---- 
- Starting simulation 0 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
---- End of simulation 0
---- Elapsed time: 17.94ms
---- Size of State obj.: 24
---- Size of traj. obj.: 24024
-
---- 
- Starting simulation 1 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
---- End of simulation 1
---- Elapsed time: 17.75ms
---- Size of State obj.: 24
---- Size of traj. obj.: 24024
-
-----------------------END---------------------
+{'preys': 2000, 'predators': 200.0}
+{'preys': 2689, 'predators': 197.8061101157223}
+{'preys': 2905, 'predators': 202.0033859231905}
+{'preys': 2968, 'predators': 200.34499591706904}
+{'preys': 2978, 'predators': 198.70585863272157}
+{'preys': 2997, 'predators': 202.87972085498492}
+{'preys': 3000, 'predators': 211.94531269176548}
+{'preys': 3000, 'predators': 216.98291706699413}
+{'preys': 3000, 'predators': 216.41763190811685} 
 ```
 
-ii) Rs - both defined and called on Rust side
-```
-----------------------------------------------
---- 
- Starting simulation 0 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
---- End of simulation 0
---- Elapsed time: 9.09ms
---- Size of State obj.: 24
---- Size of traj. obj.: 24024
-
---- 
- Starting simulation 1 ...
----
---- SIM_CONFIG: SimConfig { n_run: 2, timesteps: 1000 }
---- End of simulation 1
---- Elapsed time: 9.57ms
---- Size of State obj.: 24
---- Size of traj. obj.: 24024
-
-----------------------END---------------------
-```
-
-
-#### B. Perf. compared - with and without pre-allocation (6-Dec-21):
+### B. Perf. compared - with and without pre-allocation (6-Dec-21):
 
 **Summary:**    
 Pre-allocated case is slightly faster in avarage  
@@ -227,7 +177,7 @@ b) Final data and Trajectory vectors pre-allocated:
 
 ----------------------END---------------------
 ```
-#### C. HashMap vs BTreeMap perf. test - with config_prey_predator_integer.rs (5-Dec-21):
+### C. HashMap vs BTreeMap perf. test - with config_prey_predator_integer.rs (5-Dec-21):
 
 **Summary:**   
 For this example where we have small sized State object, using BTreeMap for State and Signal structs, we get the result with %38 less time compared to using HashMap.
