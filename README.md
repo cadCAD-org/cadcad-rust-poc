@@ -1,44 +1,41 @@
 # cadcad-rust-poc
 Proof of Concept Rust Implementation of cadCAD
 
-## How to experiment 
-git clone repo  
-`cd cadcad-rust-poc`  
-// todo
-
-## Performance
+## Performance Tests
 
 ### A. Perf. comparison of different implementations of cadCAD (29-Dec-21)
 
-Simualtion config. summary:   
-(more details below)
+Comparing time to complete the simulation with the user config.:   
 ```
 SimConfig { n_run: 1, timesteps: 100_000 }
 init_state = {
   'preys'    : 2000,
   'predators':  200.0,
 }
+
+// ... (full user config. at the end)
 ```
 
-#### 1. Pure Rust (cadCAD.rs as app)
+#### 1. Pure Rust impl. (cadCAD.rs as app)
 92ms  
+- All user config. (sim_config, init_state, policies, state_update_fns) and library code (run simulation loop etc.. ) are in Rust  
 
-#### 2. Pure python (my simple python impl.)
+#### 2. Pure Python impl. (very simple Python impl.)
 285ms  
-- All user config and run simulation loop are in Python  
+- All user config. (sim_config, init_state,  policies, state_update_fns) and library code (run simulation loop etc.. ) are in Python  
 
 
 #### 3. cadCAD.rs as library
 962ms  
-- All user config (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
-- Py policies/state update fns are called back from Rust  
+- All user config. (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
+- Python policies/state update fns are called back from Rust  
+- All library code (run simulation loop etc.. ) is in Rust  
 
 
 #### 4. Using cadCAD python package
-12sec  
- 
+12sec   
 
-#### User config. used in performance tests above
+#### User config. used for performance tests:
 
 ```py
 ##
