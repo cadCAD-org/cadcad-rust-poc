@@ -5,7 +5,7 @@ Proof of Concept Rust Implementation of cadCAD
 
 ### A. Perf. comparison of different implementations of cadCAD (29-Dec-21)
 
-Comparing time to complete the simulation with the user config.:   
+Comparing "time to complete the simulation" with the user config.:   
 ```
 SimConfig { n_run: 1, timesteps: 100_000 }
 init_state = {
@@ -25,7 +25,7 @@ init_state = {
 - All user config. (sim_config, init_state,  policies, state_update_fns) and library code (run simulation loop etc.. ) are in Python  
 
 
-#### 3. cadCAD.rs as library
+#### 3. cadCAD.rs as library (this repo)  
 962ms  
 - All user config. (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
 - Python policies/state update fns are called back from Rust  

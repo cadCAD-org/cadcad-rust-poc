@@ -13,7 +13,7 @@ fn main() {
     println!("\n######################### END #########################\n\n\n");
 }
 
-// ---------------- User config. related code --------------------- //
+// --------------------------- User config. code ------------------------- //
 
 fn create_config() -> cadCADConfig<'static> {
 
@@ -21,7 +21,6 @@ fn create_config() -> cadCADConfig<'static> {
     let sim_config = SimConfig { 
         n_run: 1,
         timesteps: 100_000
-        // timesteps: 10
     };
     let print_trajectory = false;
 
