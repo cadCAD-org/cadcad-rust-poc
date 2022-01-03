@@ -14,6 +14,7 @@ extern crate lazy_static;
 pub enum Value {
     I32(i32),
     F64(f64),
+    // ... this can be extended: https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types
 }
 
 impl Add for Value {
@@ -41,10 +42,8 @@ impl Add for Value {
 pub type State = BTreeMap<String, Value>;
 pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
 pub type Trajectory = Vec<State>;
-pub type UpdateFunc = fn(&State, &Signals) -> Update;
-pub type UpdateFuncPy<'a> = &'a PyAny;
-// pub type PolicyFunc = fn(&State) -> Signal; // Rs
-pub type PolicyFunc<'a> = &'a PyAny; // Py
+pub type UpdateFunc<'a> = &'a PyAny;
+pub type PolicyFunc<'a> = &'a PyAny;
 pub type Signals = BTreeMap<String, Value>;
 pub type SignalsPy = BTreeMap::<String, PyObject>;
 
@@ -52,18 +51,6 @@ pub type SignalsPy = BTreeMap::<String, PyObject>;
 pub struct SimConfig { 
     pub n_run: usize,
     pub timesteps: usize
-}
-
-// Rs
-pub struct StateKeyAndUpdateFn {
-    pub key: &'static str,
-    pub update_func: UpdateFunc
-}
-
-// Py
-pub struct StateKeyAndUpdateFnBy<'a> {
-    pub key: &'static str,
-    pub update_func: UpdateFuncPy<'a>
 }
 
 #[derive(Debug)]
@@ -83,10 +70,8 @@ pub struct cadCADConfig<'a> {
     pub name: String,
     pub sim_config: SimConfig,
     pub init_state: State,
-    // pub policies: &'a [PolicyFunc], // Rs
-    pub policies: Vec<PolicyFunc<'a>>, // Py
-    // pub state_key_and_update_functions: &'a [StateKeyAndUpdateFn], // Rs
-    pub state_update_functions: Vec<UpdateFuncPy<'a>>, // Py
+    pub policies: Vec<PolicyFunc<'a>>,
+    pub state_update_functions: Vec<UpdateFunc<'a>>,
     pub print_trajectory: bool,
 }
 
@@ -143,6 +128,7 @@ type ToValueFn = for<'r> fn(&'r pyo3::PyAny) -> Value;
 static PY_TO_RUST: phf::Map<&'static str, ToValueFn> = phf::phf_map! {
     "<class 'int'>"   => to_value_i32,
     "<class 'float'>" => to_value_f64,
+    // ... this can be extended: https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types
 };
 
 fn print_trajectory(trajectory: &Trajectory) {
@@ -172,9 +158,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
 
             // a. Apply policies
             let mut signals = Signals::new();
-            // for policy in cadcad_config.policies { // Rs
-            //     let signal = policy(current_state); // Rs
-            let mut current_state_py = StatePy::new(); // Py
+            let mut current_state_py = StatePy::new();
             for policy in &cadcad_config.policies {
                 Python::with_gil(|py| {
                     for (key, val) in current_state {
@@ -184,7 +168,8 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
                         };
                     }
                 });
-                let signal = call_py_policy(policy, current_state_py.clone()); // Py end
+                let signal = call_py_policy(policy, current_state_py.clone());
+                // Insert new signal or update existing
                 if let Some(mut_sig) = signals.get_mut(&signal.key) {
                     *mut_sig = *mut_sig + signal.value;
                 }                
@@ -194,11 +179,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
             }
 
             // b. Apply state update funcs
-            // for key_and_update_func in cadcad_config.state_key_and_update_functions {
-            //     let update = (key_and_update_func.update_func)(current_state, &signals);
-            //     new_state.insert(update.key, update.value);
-            // }
-            let mut signals_py = SignalsPy::new(); // Py
+            let mut signals_py = SignalsPy::new();
             Python::with_gil(|py| {
                 for (key, val) in signals {
                     match  val { 
@@ -212,20 +193,20 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
                     state_update_fn, current_state_py.clone(), signals_py.clone()
                 );
                 new_state.insert(update.key, update.value);
-            } // Py end
+            }
 
             trajectory.push(new_state);
         }
         let elapsed = now.elapsed();
         println!("--- End of simulation {:?}", i);
 
-        // x. Stats
+        // 3. Stats
         println!("--- Elapsed time: {:.2?}", elapsed);
         let size_of_state = std::mem::size_of::<State>();
         println!("--- Size of State obj.: {:?}", size_of_state);
         println!("--- Size of traj. obj.: {}", std::mem::size_of_val(&*trajectory));
 
-        // 3. Print trajectory
+        // 4. Print trajectory
         if cadcad_config.print_trajectory {
             print_trajectory(&trajectory);
         }
@@ -234,13 +215,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
     println!("\n----------------------END---------------------\n");
 }
 
-
-
-
-// ----------------------------------- pyo3 ---------------------------------- //
-
-
-
+// ----------------------------------- pyo3 binding -------------------------------- //
 
 use pyo3::prelude::*;
 use pyo3::types::*;
@@ -248,8 +223,6 @@ use pyo3::types::*;
 #[pymodule]
 fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
 
-    use rand::Rng;
-    
     #[pyfn(m)]
     fn run_simulation_rs(
         name: String,
@@ -287,67 +260,15 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
             name,
             sim_config,
             init_state,
-            // policies: POLICIES, // Rs
-            policies, // Py
-            // state_key_and_update_functions: STATE_KEYS_AND_UPDATE_FNS, // Rs
-            state_update_functions: state_update_fns, // Py
+            policies,
+            state_update_functions: state_update_fns,
             print_trajectory: print_trajectory.is_true(),
         };
 
         run_simulation(&cadcad_config);
 
-        Ok(42)
+        Ok(1)
     }
-
-    // ---------- User config in Rust
-    
-    // Params
-    const MAX_PREYS: i32 = 3000;
-
-    // Policies
-    fn prey_change_normal_conditions(state: &State) -> Signal {
-        let mut preys: i32 = 0;
-        if let Value::I32(value) = state["preys"] {
-            preys = value;
-        }
-        // Assuming: preys_change goes down with every iteration since
-        // natural resources limits the number of preys to MAX_PREYS
-        let preys_change = if preys < MAX_PREYS {
-        let mut random = rand::thread_rng();
-            random.gen_range(0..MAX_PREYS-preys) 
-        } else {0};
-        Signal { key: "preys_change".to_string(), value: Value::I32(preys_change) }
-    }
-
-    fn predator_change_normal_conditions(_state: &State) -> Signal {
-        let mut random = rand::thread_rng();
-        let predators_change = random.gen_range(-10.0..10.0);
-        Signal { key: "predators_change".to_string(), value: Value::F64(predators_change) }
-    }
-
-    // State update fns
-    fn update_prey(state: &State, signals: &Signals) -> Update {
-        let preys_new = state["preys"] + signals["preys_change"];
-        Update { key: "preys".to_string(), value: preys_new }
-    }
-
-    fn update_predator(state: &State, signals: &Signals) -> Update {
-        let predators_new = state["predators"] + signals["predators_change"];
-        Update { key: "predators".to_string(), value: predators_new }
-    }
-
-    // Mechanisms
-    const POLICIES: &'static [for<'r, 's> fn(&'r State) -> Signal] = &[
-        prey_change_normal_conditions,
-        predator_change_normal_conditions,
-    ];
-
-    const STATE_KEYS_AND_UPDATE_FNS: &'static [StateKeyAndUpdateFn] = &[
-        StateKeyAndUpdateFn { key: "preys", update_func: update_prey },
-        StateKeyAndUpdateFn { key: "predators", update_func: update_predator },
-    ];
-
-    // ---------- end of User config in Rust
 
     Ok(())
 }

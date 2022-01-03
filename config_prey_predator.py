@@ -2,7 +2,7 @@ import cadcad_rs, random, time
 
 ##
 sim_config = {
-    'T': 100000,  # timesteps
+    'T': 100_000,  # timesteps
     'N': 1,   # times the simulation will be run (Monte Carlo runs)
 }
 
@@ -48,9 +48,6 @@ state_update_fns = [
     update_predator
 ]
 
-##
-start = time.process_time()
-##
 cadcad_rs.run_simulation_rs(
   "config from python",
   sim_config,
@@ -59,6 +56,3 @@ cadcad_rs.run_simulation_rs(
   state_update_fns,
   print_trajectory
 )
-##
-end = time.process_time()
-print(end - start, "sec(s)")
