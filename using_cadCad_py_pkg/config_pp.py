@@ -1,12 +1,10 @@
+### Template used:
+### https://github.com/cadCAD-org/demos/blob/master/tutorials/robots_and_marbles/videos/robot-marbles-part-3/config.py
+
 # import libraries
 from cadCAD.configuration import append_configs
 from cadCAD.configuration.utils import config_sim
 import random
-
-seeds = {
-    # 'z': np.random.RandomState(1),
-    # 'a': np.random.RandomState(2)
-}
 
 sim_config = config_sim({
     'T': range(100_000), # number of discrete iterations in each experiement
@@ -42,14 +40,7 @@ genesis_states = {
     'predators': 200.0,
 }
 
-exogenous_states = {
-    #'time': time_model
-}
-
-env_processes = {
-}
-
-#build mechanism dictionary to "wire up the circuit"
+# Build mechanism dictionary to "wire up the circuit"
 mechanisms = [
     { 
         'policies': {
@@ -66,8 +57,8 @@ mechanisms = [
 append_configs(
     sim_configs=sim_config,
     initial_state=genesis_states,
-    seeds=seeds,
-    raw_exogenous_states=exogenous_states,
-    env_processes=env_processes,
+    seeds={},
+    raw_exogenous_states={},
+    env_processes={},
     partial_state_update_blocks=mechanisms
 )
