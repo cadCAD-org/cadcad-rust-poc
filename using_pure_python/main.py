@@ -3,7 +3,6 @@ import random, time
 ##
 sim_config = {
     'T': 100_000,  # timesteps
-    # 'T': 10,  # timesteps
     'N': 1,   # times the simulation will be run (Monte Carlo runs)
 }
 
@@ -36,7 +35,7 @@ def predator_change_normal_conditions(state):
 policies = [
     prey_change_normal_conditions, 
     predator_change_normal_conditions,
-    # prey_migration,
+    # prey_migration, # Enable to test aggregate-able policies feature
 ]
 
 # SUFS/Mechanisms

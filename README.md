@@ -35,7 +35,10 @@ init_state = {
 #### 4. Using cadCAD python package
 12sec   
 
-#### User config. used for performance tests:
+#### User config. used for performance tests: 
+
+All implementations above uses this user config 
+(Note: Pure Rust impl. uses Rust version of this config).
 
 ```py
 ##
