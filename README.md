@@ -17,16 +17,9 @@ Proof of Concept Rust Implementation of cadCAD
 
 ### A. Perf. comparison of different implementations of cadCAD (29-Dec-21)
 
-Comparing "time to complete a simulation" with the user config.:   
-```
-SimConfig { n_run: 1, timesteps: 100_000 }
-init_state = {
-    'preys'    : 2000,
-    'predators':  200.0,
-}
+Comparing "the time to complete a simulation" with a sample user config. (preys_predators) used with different implementations:   
 
-// ... (full user config. at the end)
-```
+(Full user config. can be seen at the end)
 
 #### 1. Pure Rust impl. (cadCAD.rs, this repo, as app.)
 92ms  
@@ -55,7 +48,7 @@ All implementations above uses this user config
 ```py
 ##
 sim_config = {
-    'T': 100000,  # timesteps
+    'T': 100_000,  # timesteps
     'N': 1,   # times the simulation will be run (Monte Carlo runs)
 }
 
