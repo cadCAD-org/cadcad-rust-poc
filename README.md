@@ -1,6 +1,8 @@
 # cadcad-rust-poc
 Proof of Concept Rust Implementation of cadCAD
 
+## 1. General Info
+
 <h1>
   <img src="doc//cadCAD.rs_architecture.jpg" width="">  
 </h1>
@@ -9,26 +11,70 @@ Proof of Concept Rust Implementation of cadCAD
 - Python policies/state update fns are called back from Rust (Rust state object also passed to Python because of this)  
 - All library code `src/lib.rs` (run simulation loop, Rust-Python FFI etc..) is in Rust  
 
+
 #### Possible Next Actions:  
 - Extend the State value type `enum Value` in `src/lib.rs` (see https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types) to support more types between Rust-Python. Currently, only int32 and float64 types are supported.
 
 
-## Performance Tests
+## 2. How to experiment
 
-### A. Perf. comparison of different implementations of cadCAD (29-Dec-21)
+Install
+```
+Install Rust: https://www.rust-lang.org/tools/install
+git clone https://github.com/cadCAD-org/cadcad-rust-poc.git
+pip install virtualenv
+cd cadcad-rust-poc
+virtualenv --python python3.9 venv
+source venv/bin/activate // or 'deactivate' when needed
+pip install maturin
+```
+
+Build and Run
+```
+cd cadcad-rust-poc
+maturin develop && python3 config_prey_predator.py // debug build 
+maturin develop --release && python3 config_prey_predator.py // release build
+```
+
+Shared lib. location:  
+`<proj_root>/venv/lib/python3.9/site-packages/cadcad_rs/cadcad_rs.cpython-39-darwin.so`
+
+
+## 3. Performance Tests
+
+### A. Perf. comparisons of different implementations with cadCAD.rs
 
 Comparing "the time to complete a simulation" with a sample user config. (preys_predators) used with different implementations:   
 
 (Full user config. can be seen at the end)
 
-#### 1. Pure Rust impl. (cadCAD.rs, this repo, as app.)
+| Implementation                   | Time to complete a simulation |
+|----------------------------------|-------------------------------|
+| 1. Everything in Rust (cadCAD.rs, this repo, used as app.)               | 92 ms                         |
+| 2. Everything in Python (my very simple Python impl.            | 285 ms                        |
+| 3. cadCAD.rs as library (this repo) | 962 ms                        |
+| 4. Using cadCAD python package      | 12 sec                        |
+
+#### 1. Everything in Rust (cadCAD.rs, this repo, used as app.)
 92ms  
 - All user config. (sim_config, init_state, policies, state_update_fns) and library code (run simulation loop etc.. ) are in Rust  
+- How to experiment: 
 
-#### 2. Pure Python impl. (my very simple Python impl.)
+```
+cd using_pure_rust
+cargo r
+```
+
+
+#### 2. Everything in Python (my very simple Python impl.)
 285ms  
 - All user config. (sim_config, init_state,  policies, state_update_fns) and library code (run simulation loop etc.. ) are in Python  
+- How to experiment: 
 
+```
+cd using_pure_python
+python main.py
+```
 
 #### 3. cadCAD.rs as library (this repo)  
 962ms  
@@ -39,10 +85,17 @@ Comparing "the time to complete a simulation" with a sample user config. (preys_
 
 #### 4. Using cadCAD python package
 12sec   
+- https://github.com/cadCAD-org/cadCAD
+- How to experiment: 
 
-#### User config. used for performance tests: 
+```
+cd using_cadCad_py_pkg
+python main.py
+```
 
-All implementations above uses this user config 
+#### The user config. used for performance tests: 
+
+All implementations above used this user config:   
 (Note: Pure Rust impl. uses Rust version of this config).
 
 ```py
@@ -95,7 +148,7 @@ Sample trajectory:
 {'preys': 3000, 'predators': 216.41763190811685} 
 ```
 
-### B. Perf. compared - with and without pre-allocation (6-Dec-21):
+### B. Perf. compared - with and without pre-allocation:
 
 **Summary:**    
 Pre-allocated case is slightly faster in avarage  
@@ -180,7 +233,7 @@ b) Final data and Trajectory vectors pre-allocated:
 
 ----------------------END---------------------
 ```
-### C. HashMap vs BTreeMap perf. test - with config_prey_predator_integer.rs (5-Dec-21):
+### C. HashMap vs BTreeMap perf. test - with config_prey_predator_integer.rs:
 
 **Summary:**   
 For this example where we have small sized State object, using BTreeMap for State and Signal structs, we get the result with %38 less time compared to using HashMap.
