@@ -9,18 +9,18 @@ Comparing "time to complete the simulation" with the user config.:
 ```
 SimConfig { n_run: 1, timesteps: 100_000 }
 init_state = {
-  'preys'    : 2000,
-  'predators':  200.0,
+    'preys'    : 2000,
+    'predators':  200.0,
 }
 
 // ... (full user config. at the end)
 ```
 
-#### 1. Pure Rust impl. (cadCAD.rs as app)
+#### 1. Pure Rust impl. (cadCAD.rs, this repo, as app.)
 92ms  
 - All user config. (sim_config, init_state, policies, state_update_fns) and library code (run simulation loop etc.. ) are in Rust  
 
-#### 2. Pure Python impl. (very simple Python impl.)
+#### 2. Pure Python impl. (my very simple Python impl.)
 285ms  
 - All user config. (sim_config, init_state,  policies, state_update_fns) and library code (run simulation loop etc.. ) are in Python  
 
@@ -43,14 +43,14 @@ All implementations above uses this user config
 ```py
 ##
 sim_config = {
-	'T': 100000,  # timesteps
-	'N': 1,   # times the simulation will be run (Monte Carlo runs)
+    'T': 100000,  # timesteps
+    'N': 1,   # times the simulation will be run (Monte Carlo runs)
 }
 
 ##
 init_state = {
-	'preys'    : 2000,
-	'predators':  200.0,
+    'preys'    : 2000,
+    'predators':  200.0,
 }
 
 ## Params
@@ -58,25 +58,25 @@ MAX_PREYS = 3000
 
 ## Policies
 def prey_change_normal_conditions(state):
-	preys =  state['preys']
-	# Assuming: preys_change goes down with every iteration since
-	# natural resources limits the number of preys to MAX_PREYS 
-	preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
-	return ( { "preys_change": preys_change } )
+    preys =  state['preys']
+    # Assuming: preys_change goes down with every iteration since
+    # natural resources limits the number of preys to MAX_PREYS 
+    preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
+    return ( { "preys_change": preys_change } )
 
 def predator_change_normal_conditions(state):
-	return ( { "predators_change": random.uniform(-10.0, 10.0) } )
+    return ( { "predators_change": random.uniform(-10.0, 10.0) } )
 
 # SUFS/Mechanisms
 def update_prey(s, _input):
-	preys = s['preys'] + _input['preys_change']
-	return ('preys', preys)
+    preys = s['preys'] + _input['preys_change']
+    return ('preys', preys)
 
 def update_predator(s, _input):
-	predators = s['predators'] + _input['predators_change']
-	return ('predators', predators) 
+    predators = s['predators'] + _input['predators_change']
+    return ('predators', predators) 
 ```   
-	
+    
 Sample trajectory:		
 ```
 {'preys': 2000, 'predators': 200.0}
@@ -100,12 +100,10 @@ Possible Next Actions:
 
 State obj.:
 ```
-    static ref INIT_STATE: State<'static, ValueType> = State::from(
-        [ 
-            ("preys",     Foo { val: 2000, dummy_val: 0.1 } ),
-            ("predators", Foo { val: 200 , dummy_val: 0.1 } )
-        ]
-    );
+INIT_STATE = [ 
+    ("preys",     Foo { val: 2000, dummy_val: 0.1 } ),
+    ("predators", Foo { val: 200 , dummy_val: 0.1 } )
+]
 ```    
 
 a) Final data and Trajectory vectors NOT pre-allocated:  
