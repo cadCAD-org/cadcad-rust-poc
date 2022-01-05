@@ -18,11 +18,11 @@ Proof of Concept Rust Implementation of cadCAD
 
 ## 2. How to experiment
 
-Install
+Install and Configure
 ```
 Install Rust: https://www.rust-lang.org/tools/install
-git clone https://github.com/cadCAD-org/cadcad-rust-poc.git
 pip install virtualenv
+git clone https://github.com/cadCAD-org/cadcad-rust-poc.git
 cd cadcad-rust-poc
 virtualenv --python python3.9 venv
 source venv/bin/activate // or 'deactivate' when needed
@@ -31,9 +31,10 @@ pip install maturin
 
 Build and Run
 ```
-cd cadcad-rust-poc
-maturin develop && python3 config_prey_predator.py // debug build 
-maturin develop --release && python3 config_prey_predator.py // release build
+// From project root
+maturin develop // debug build 
+maturin develop --release // release build
+python3 config_prey_predator.py // run
 ```
 
 Shared lib. location:  
@@ -81,6 +82,7 @@ python main.py
 - All user config. (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
 - Python policies/state update fns are called back from Rust  
 - All library code (run simulation loop etc.. ) is in Rust  
+- How to experiment: See the related section for this repo above
 
 
 #### 4. Using cadCAD python package
