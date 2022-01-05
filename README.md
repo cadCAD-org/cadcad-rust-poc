@@ -1,11 +1,23 @@
 # cadcad-rust-poc
 Proof of Concept Rust Implementation of cadCAD
 
+<h1>
+  <img src="doc//cadCAD.rs_architecture.jpg" width="">  
+</h1>
+
+- All user config. (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
+- Python policies/state update fns are called back from Rust (Rust state object also passed to Python because of this)  
+- All library code `src/lib.rs` (run simulation loop, Rust-Python FFI etc..) is in Rust  
+
+#### Possible Next Actions:  
+- Extend the State value type `enum Value` in `src/lib.rs` (see https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types) to support more types between Rust-Python. Currently, only int32 and float64 types are supported.
+
+
 ## Performance Tests
 
 ### A. Perf. comparison of different implementations of cadCAD (29-Dec-21)
 
-Comparing "time to complete the simulation" with the user config.:   
+Comparing "time to complete a simulation" with the user config.:   
 ```
 SimConfig { n_run: 1, timesteps: 100_000 }
 init_state = {
