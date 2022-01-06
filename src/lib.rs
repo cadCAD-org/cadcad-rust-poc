@@ -54,12 +54,14 @@ pub struct SimConfig {
     pub timesteps: usize
 }
 
+// Create by state update fns
 #[derive(Debug)]
 pub struct Update {
     pub key: String,
     pub value: Value
 }
 
+// Created by policies, used by state update fns
 #[derive(Debug)]
 pub struct Signal {
     pub key: String,
@@ -76,17 +78,17 @@ pub struct cadCADConfig<'a> {
     pub print_trajectory: bool,
 }
 
-pub fn call_py_policy(pol: &PyAny, current_state_py: StatePy) -> Signal {
-    let pyfn = pol.downcast::<PyFunction>().unwrap();
-    let res = pyfn.call1(
+pub fn call_py_policy(policy: &PyAny, current_state_py: StatePy) -> Signal {
+    let pyPolicy = policy.downcast::<PyFunction>().unwrap();
+    let result = pyPolicy.call1(
         (current_state_py, 0)
     ).unwrap().downcast::<PyTuple>().unwrap();
-    let key = to_string(res.get_item(0).unwrap());
-    let val = res.get_item(1).unwrap();
-    let val_type = val.get_type().to_string();
-    let val = PY_TO_RUST.get(val_type.as_str())
-        .expect("Unsupported python type")(val);    
-    Signal { key, value: val }
+    let key = to_string(result.get_item(0).unwrap());
+    let value = result.get_item(1).unwrap();
+    let value_type = value.get_type().to_string();
+    let value = PY_TO_RUST.get(value_type.as_str())
+        .expect("Unsupported python type")(value);    
+    Signal { key, value }
 }
 
 pub fn call_py_state_update_fn(
@@ -95,15 +97,15 @@ pub fn call_py_state_update_fn(
     signals: SignalsPy
 ) -> Update {
     let pyfn = state_update_fn.downcast::<PyFunction>().unwrap();
-    let res = pyfn.call1(
+    let result = pyfn.call1(
         (current_state_py, signals)
     ).unwrap().downcast::<PyTuple>().unwrap();
-    let key = to_string(res.get_item(0).unwrap());
-    let val = res.get_item(1).unwrap();
-    let val_type = val.get_type().to_string();
-    let val = PY_TO_RUST.get(val_type.as_str())
-        .expect("Unsupported python type")(val);
-    Update { key, value: val }
+    let key = to_string(result.get_item(0).unwrap());
+    let value = result.get_item(1).unwrap();
+    let value_type = value.get_type().to_string();
+    let value = PY_TO_RUST.get(value_type.as_str())
+        .expect("Unsupported python type")(value);    
+    Update { key, value }
 }
 
 // Pyo3 utility fns.
@@ -141,6 +143,13 @@ fn print_trajectory(trajectory: &Trajectory) {
     }
 }
 
+fn print_stats(trajectory: &Trajectory) {
+    let size_of_state = std::mem::size_of::<State>();
+    println!("--- Size of State obj.: {:?}", size_of_state);
+    println!("--- Size of trajectory obj.: {}", std::mem::size_of_val(&*trajectory));
+}
+
+// Todo: Remove unnecessary prints after POC period
 pub fn run_simulation(cadcad_config: &cadCADConfig) {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
@@ -181,7 +190,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
                 }
             }
 
-            // b. Apply state update funcs
+            // b. Apply state update fns
             let mut signals_py = SignalsPy::new();
             Python::with_gil(|py| {
                 for (key, val) in signals {
@@ -202,18 +211,13 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
         }
         let elapsed = now.elapsed();
         println!("--- End of simulation {:?}", i);
+        println!("--- Simulation time: {:.2?}", elapsed);
 
         // 3. Stats
-        println!("--- Elapsed time: {:.2?}", elapsed);
-        let size_of_state = std::mem::size_of::<State>();
-        println!("--- Size of State obj.: {:?}", size_of_state);
-        println!("--- Size of traj. obj.: {}", std::mem::size_of_val(&*trajectory));
+        print_stats(&trajectory);
 
         // 4. Print trajectory
-        if cadcad_config.print_trajectory {
-            print_trajectory(&trajectory);
-        }
-
+        if cadcad_config.print_trajectory { print_trajectory(&trajectory); }
     }
     println!("\n----------------------END---------------------\n");
 }
