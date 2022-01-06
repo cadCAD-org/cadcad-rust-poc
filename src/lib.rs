@@ -8,6 +8,7 @@ extern crate lazy_static;
 //// Improvements:
 // Todo: Pre-allocate memory before everything (e.g. n_run * timesteps * sizeof State)
 // Todo: Remove unnecessary "pub"s
+// Todo: Remove unnecessary prints after POC period
 
 // State Value Type
 #[derive(Debug, Clone, Copy)]
@@ -38,7 +39,7 @@ impl Add for Value {
 }
 
 // Type Defs.
-// Todo: Consider HashMap later
+// Todo: Consider HashMap or other custom fast hashmap later
 pub type State = BTreeMap<String, Value>;
 pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
 pub type Trajectory = Vec<State>;
@@ -105,6 +106,7 @@ pub fn call_py_state_update_fn(
     Update { key, value: val }
 }
 
+// Pyo3 utility fns.
 fn get_i32(dic: &PyDict, key: &str) -> i32 {
     to_i32(dic.get_item(key).unwrap())
 }
@@ -124,6 +126,7 @@ fn to_string(any: &PyAny) -> String {
 fn to_value_i32(any: &PyAny) -> Value { Value::I32(to_i32(any)) }
 fn to_value_f64(any: &PyAny) -> Value { Value::F64(to_f64(any)) }
 
+// Python Rust type conversion map
 type ToValueFn = for<'r> fn(&'r pyo3::PyAny) -> Value;
 static PY_TO_RUST: phf::Map<&'static str, ToValueFn> = phf::phf_map! {
     "<class 'int'>"   => to_value_i32,
@@ -245,16 +248,9 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
                 .expect("Unsupported python type")(val);
             init_state.insert(key, val);
         }
-        
-        let mut policies: Vec<&PyAny> = Vec::new();
-        for pol in policies_py {
-            policies.push(pol);
-        }
 
-        let mut state_update_fns: Vec<&PyAny> = Vec::new();
-        for sfn in state_update_fns_py {
-            state_update_fns.push(sfn);
-        }
+        let policies : Vec<&PyAny> = policies_py.iter().collect();
+        let state_update_fns : Vec<&PyAny> = state_update_fns_py.iter().collect();
 
         let cadcad_config = cadCADConfig {
             name,

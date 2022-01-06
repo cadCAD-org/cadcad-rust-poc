@@ -14,9 +14,9 @@ run = Executor(exec_context=single_proc_ctx, configs=first_config)
 raw_result, tensor_field = run.execute()
 ##
 end = time.process_time()
-print(end - start, "sec(s)")
+print("Simulation took", end - start, "sec(s)")
 
-## Print
+## Print trajectory
 print_result = 0
 if print_result:
   for i in raw_result:

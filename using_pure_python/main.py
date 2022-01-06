@@ -1,5 +1,10 @@
+## Info:
+## This file consists of a dummy user config and
+## a simple run simulation loop to be used for performance tests
+
 import random, time
 
+## ------- User config 
 ##
 sim_config = {
     'T': 100_000,  # timesteps
@@ -38,7 +43,7 @@ policies = [
     # prey_migration, # Enable to test aggregate-able policies feature
 ]
 
-# SUFS/Mechanisms
+## SUFS/Mechanisms
 def update_prey(state, signals):
     preys = state['preys'] + signals['preys_change']
     return ('preys', preys)
@@ -52,7 +57,7 @@ state_update_fns = [
     update_predator
 ]
 
-## Loop
+## ----- Run simulation loop
 print("\n### Sim. config:", sim_config)
 trajectory = [init_state]
 for i in range(sim_config['N']): # Simulation
@@ -70,8 +75,8 @@ for i in range(sim_config['N']): # Simulation
                 signals[key] = val
 
         new_state = {}
-        for state_updat_fn in state_update_fns:
-            update = state_updat_fn(current_state, signals)
+        for state_update_fn in state_update_fns:
+            update = state_update_fn(current_state, signals)
             new_state[update[0]] = update[1]
             
         trajectory.append(new_state)

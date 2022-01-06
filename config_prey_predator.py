@@ -1,4 +1,7 @@
-import cadcad_rs, random, time
+## Info:
+## This file is a dummy user config to be used for performance tests
+
+import cadcad_rs, random
 
 ##
 sim_config = {
