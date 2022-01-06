@@ -51,10 +51,10 @@ Comparing "the time to complete a simulation" with a sample user config. (preys_
 
 | Implementation                   | Time to complete a simulation |
 |----------------------------------|-------------------------------|
-| 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as app.)               | 92 ms                         |
-| 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | 285 ms                        |
-| 3. cadCAD.rs as library (this repo) | 962 ms                        |
-| 4. Using cadCAD python package      | 12 sec                        |
+| 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as app.)               | ~92 ms                         |
+| 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | ~285 ms                        |
+| 3. cadCAD.rs as library (this repo) | ~700 ms                        |
+| 4. Using cadCAD python package      | ~12 sec                        |
 
 #### 1. Everything in Rust (cadCAD.rs, this repo, used as app.)
 92ms  
@@ -78,7 +78,7 @@ python main.py
 ```
 
 #### 3. cadCAD.rs as library (this repo)  
-962ms  
+700ms  
 - All user config. (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
 - Python policies/state update fns are called back from Rust  
 - All library code (run simulation loop etc.. ) is in Rust  
