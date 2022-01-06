@@ -176,10 +176,16 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
                     };
                 }
                 let signal = call_py_policy(policy, current_state_py.clone());
-                // Todo: Add logic: Insert new signal or update existing to support 
-                // multiple policies written for the same key
-                signals.set_item(signal.key, signal.value)
-                       .map_err(|err| println!("{:?}", err)).ok();
+                // Todo: Add logic: Insert new signal or add to existing to support 
+                // multiple policies to be writeable for the same key
+                if signals.contains(&signal.key).unwrap() {
+                    // todo: 
+                    // signals.set_item(signals.get_item(signal.key) + signal.key)
+                }
+                else {
+                    signals.set_item(&signal.key, signal.value)
+                        .map_err(|err| println!("{:?}", err)).ok();
+                }
             }
 
             // b. Apply state update fns
