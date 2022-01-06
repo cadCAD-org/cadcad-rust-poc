@@ -45,8 +45,7 @@ pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
 pub type Trajectory = Vec<State>;
 pub type UpdateFunc<'a> = &'a PyAny;
 pub type PolicyFunc<'a> = &'a PyAny;
-pub type Signals = BTreeMap<String, Value>;
-pub type SignalsPy = BTreeMap::<String, PyObject>;
+pub type Signals = PyDict;
 
 #[derive(Debug)]
 pub struct SimConfig { 
@@ -63,9 +62,9 @@ pub struct Update {
 
 // Created by policies, used by state update fns
 #[derive(Debug)]
-pub struct Signal {
+pub struct Signal<'a> {
     pub key: String,
-    pub value: Value
+    pub value: &'a PyAny
 }
 
 #[allow(non_camel_case_types)]
@@ -78,27 +77,24 @@ pub struct cadCADConfig<'a> {
     pub print_trajectory: bool,
 }
 
-pub fn call_py_policy(policy: &PyAny, current_state_py: StatePy) -> Signal {
+pub fn call_py_policy<'a>(policy: &'a PyAny, current_state_py: StatePy) -> Signal<'a> {
     let pyPolicy = policy.downcast::<PyFunction>().unwrap();
     let result = pyPolicy.call1(
         (current_state_py, 0)
     ).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(result.get_item(0).unwrap());
-    let value = result.get_item(1).unwrap();
-    let value_type = value.get_type().to_string();
-    let value = PY_TO_RUST.get(value_type.as_str())
-        .expect("Unsupported python type")(value);    
+    let value = result.get_item(1).unwrap();  
     Signal { key, value }
 }
 
 pub fn call_py_state_update_fn(
     state_update_fn: &PyAny,
     current_state_py: StatePy,
-    signals: SignalsPy
+    signals: &Signals
 ) -> Update {
     let pyfn = state_update_fn.downcast::<PyFunction>().unwrap();
     let result = pyfn.call1(
-        (current_state_py, signals)
+        (current_state_py, signals.clone())
     ).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(result.get_item(0).unwrap());
     let value = result.get_item(1).unwrap();
@@ -168,44 +164,32 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
             let current_state = &trajectory[k];
             let mut new_state = State::new();
 
+            Python::with_gil(|py| {
             // a. Apply policies
-            let mut signals = Signals::new();
+            let signals = Signals::new(py);
             let mut current_state_py = StatePy::new();
             for policy in &cadcad_config.policies {
-                Python::with_gil(|py| {
-                    for (key, val) in current_state {
-                        match  val { 
-                            Value::I32(i) => current_state_py.insert(key, i.to_object(py)), 
-                            Value::F64(f) => current_state_py.insert(key, f.to_object(py)),
-                        };
-                    }
-                });
-                let signal = call_py_policy(policy, current_state_py.clone());
-                // Insert new signal or update existing
-                if let Some(mut_sig) = signals.get_mut(&signal.key) {
-                    *mut_sig = *mut_sig + signal.value;
-                }                
-                else {
-                    signals.insert(signal.key, signal.value);
+                for (key, val) in current_state {
+                    match  val { 
+                        Value::I32(i) => current_state_py.insert(key, i.to_object(py)), 
+                        Value::F64(f) => current_state_py.insert(key, f.to_object(py)),
+                    };
                 }
+                let signal = call_py_policy(policy, current_state_py.clone());
+                // Todo: Add logic: Insert new signal or update existing to support 
+                // multiple policies written for the same key
+                signals.set_item(signal.key, signal.value)
+                       .map_err(|err| println!("{:?}", err)).ok();
             }
 
             // b. Apply state update fns
-            let mut signals_py = SignalsPy::new();
-            Python::with_gil(|py| {
-                for (key, val) in signals {
-                    match  val { 
-                        Value::I32(i) => signals_py.insert(key, i.to_object(py)), 
-                        Value::F64(f) => signals_py.insert(key, f.to_object(py)),
-                    };
-                }
-            });
             for state_update_fn in &cadcad_config.state_update_functions {
                 let update = call_py_state_update_fn(
-                    state_update_fn, current_state_py.clone(), signals_py.clone()
+                    state_update_fn, current_state_py.clone(), &signals
                 );
                 new_state.insert(update.key, update.value);
             }
+            }); // end of py_gil
 
             trajectory.push(new_state);
         }
