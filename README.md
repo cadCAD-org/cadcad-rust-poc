@@ -45,9 +45,8 @@ Shared lib. location:
 
 ### A. Perf. comparisons of different implementations with cadCAD.rs
 
-Comparing "the time to complete a simulation" with a sample user config. (preys_predators) used with different implementations:   
+Comparing "the time to complete a simulation" with a sample user config. (can be seen at the end) used with different implementations:   
 
-(Full user config. can be seen at the end)
 
 | Implementation                   | Time to complete a simulation |
 |----------------------------------|-------------------------------|
@@ -56,6 +55,7 @@ Comparing "the time to complete a simulation" with a sample user config. (preys_
 | 3. cadCAD.rs as library (this repo) | ~700 ms                        |
 | 4. Using cadCAD python package      | ~12 sec                        |
 
+  
 #### 1. Everything in Rust (cadCAD.rs, this repo, used as app.)
 92ms  
 - All user config. (sim_config, init_state, policies, state_update_fns) and library code (run simulation loop etc.. ) are in Rust  

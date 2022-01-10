@@ -1,3 +1,4 @@
+### This file is a dummy user config to use with performance tests
 ### Template used:
 ### https://github.com/cadCAD-org/demos/blob/master/tutorials/robots_and_marbles/videos/robot-marbles-part-3/config.py
 
