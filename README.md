@@ -12,9 +12,17 @@ Proof of Concept Rust Implementation of cadCAD
 - All library code `src/lib.rs` (run simulation loop, Rust-Python FFI etc..) is in Rust  
 
 
-#### Possible Next Actions:  
-- Extend the State value type `enum Value` in `src/lib.rs` (see https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types) to support more types between Rust-Python. Currently, only int32 and float64 types are supported.
+### What might be next?  
 
+- [Speed Improv.] Currently, we call-back Python policies and state update functions from Rust with the help of Pyo3 library. For better performance, we might compile Python policies and state update functions (user config.) down to a low level shared library (e.g. to C using Cython) and call them in a more performant way. 
+
+- [Speed Improv.] Currently, we use dictionaries (`PyDict`) from Pyo3 library as Hashmap containers (e.g. for State and Signals ). We might use faster Hashmaps (e.g. Fxhash or even Rust std::HashMap) for faster simulation runtimes.
+
+- [All Types Support] Extend the State value type `enum Value` in `src/lib.rs` (see https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types) to support more types between Rust-Python. Currently, only int32 and float64 types are supported.
+
+- [Explore Other Solutions] Currently, we are using Pyo3 library and tools to achieve Rust-Python FFI which is the heart of the current solution, so we are potentially limited to Pyo3 capabilities/performance. We might research/experiment other options which might give us faster results.
+
+- [Speed Improv.] Use single type `PyDict` for the type of State, remove `StatePy` and `StateRs` redundancy/conversion (the same already done for Signals and gave %33 speed improvement)
 
 ## 2. How to experiment
 
@@ -32,13 +40,14 @@ pip install maturin
 Build and Run
 ```
 // From project root
+cd <project_root>
 maturin develop // debug build 
 maturin develop --release // release build
 python3 config_prey_predator.py // run
 ```
 
 Shared lib. location:  
-`<proj_root>/venv/lib/python3.9/site-packages/cadcad_rs/cadcad_rs.cpython-39-darwin.so`
+`<project_root>/venv/lib/python3.9/site-packages/cadcad_rs/cadcad_rs.cpython-39-darwin.so`
 
 
 ## 3. Performance Tests
@@ -50,7 +59,7 @@ Comparing "the time to complete a simulation" with a sample user config. (can be
 
 | Implementation                   | Time to complete a simulation |
 |----------------------------------|-------------------------------|
-| 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as app.)               | ~92 ms                         |
+| 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as an app.)               | ~92 ms                         |
 | 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | ~285 ms                        |
 | 3. cadCAD.rs as library (this repo) | ~700 ms                        |
 | 4. Using cadCAD python package      | ~12 sec                        |
@@ -63,7 +72,7 @@ Comparing "the time to complete a simulation" with a sample user config. (can be
 
 ```
 cd using_pure_rust
-cargo r
+cargo r --release
 ```
 
 
