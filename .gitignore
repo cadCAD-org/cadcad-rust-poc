@@ -6,3 +6,4 @@
 # Comment out if this is a library
 # More information here https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html
 # Cargo.lock
+perf_tests/pure_rust_impl/target/

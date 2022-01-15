@@ -40,6 +40,8 @@ impl Add for Value {
 
 // Type Defs.
 // Todo: Consider HashMap or other custom fast hashmap later
+// Todo: Use PyDict only for the type of State, remove StatePy and StateRs 
+//       redundancy/conversion.
 pub type State = BTreeMap<String, Value>;
 pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
 pub type Trajectory = Vec<State>;

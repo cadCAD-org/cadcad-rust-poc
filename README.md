@@ -71,7 +71,7 @@ Comparing "the time to complete a simulation" with a sample user config. (can be
 - How to experiment: 
 
 ```
-cd using_pure_rust
+cd cd perf_tests/pure_rust_impl
 cargo r --release
 ```
 
@@ -82,7 +82,7 @@ cargo r --release
 - How to experiment: 
 
 ```
-cd using_pure_python
+cd perf_tests/pure_python_impl
 python main.py
 ```
 
@@ -100,7 +100,7 @@ python main.py
 - How to experiment: 
 
 ```
-cd using_cadCad_py_pkg
+cd cd perf_tests/using_cadCad_py_pkg
 python main.py
 ```
 

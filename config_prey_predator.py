@@ -1,5 +1,5 @@
 ## Info:
-## This file is a dummy user config to use with performance tests
+## This file is a reference (and dummy) user config to use with performance tests
 
 import cadcad_rs, random
 
