@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-use std::{collections::{BTreeMap}, usize};
+use std::{usize};
 use std::ops::Add;
 extern crate lazy_static;
 
@@ -39,12 +39,8 @@ impl Add for Value {
 }
 
 // Type Defs.
-// Todo: Consider HashMap or other custom fast hashmap later
-// Todo: Use PyDict only for the type of State, remove StatePy and StateRs 
-//       redundancy/conversion.
-pub type State = BTreeMap<String, Value>;
-pub type StatePy<'a> = BTreeMap::<&'a str, PyObject>;
-pub type Trajectory = Vec<State>;
+pub type State = PyDict;
+pub type Trajectory<'a> = Vec<&'a State>;
 pub type UpdateFunc<'a> = &'a PyAny;
 pub type PolicyFunc<'a> = &'a PyAny;
 pub type Signals = PyDict;
@@ -57,9 +53,9 @@ pub struct SimConfig {
 
 // Create by state update fns
 #[derive(Debug)]
-pub struct Update {
+pub struct Update<'a> {
     pub key: String,
-    pub value: Value
+    pub value: &'a PyAny
 }
 
 // Created by policies, used by state update fns
@@ -73,36 +69,36 @@ pub struct Signal<'a> {
 pub struct cadCADConfig<'a> {
     pub name: String,
     pub sim_config: SimConfig,
-    pub init_state: State,
+    pub init_state: &'a State,
     pub policies: Vec<PolicyFunc<'a>>,
     pub state_update_functions: Vec<UpdateFunc<'a>>,
     pub print_trajectory: bool,
 }
 
-pub fn call_py_policy<'a>(policy: &'a PyAny, current_state_py: StatePy) -> Signal<'a> {
+pub fn call_py_policy<'a>(
+    py: Python, policy: &'a PyAny, current_state: &State
+) -> Signal<'a> {
     let pyPolicy = policy.downcast::<PyFunction>().unwrap();
     let result = pyPolicy.call1(
-        (current_state_py, 0)
+        (current_state.to_object(py), 0)
     ).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(result.get_item(0).unwrap());
     let value = result.get_item(1).unwrap();  
     Signal { key, value }
 }
 
-pub fn call_py_state_update_fn(
-    state_update_fn: &PyAny,
-    current_state_py: StatePy,
+pub fn call_py_state_update_fn<'a>(
+    py: Python,
+    state_update_fn: &'a PyAny,
+    current_state: &State,
     signals: &Signals
-) -> Update {
+) -> Update<'a> {
     let pyfn = state_update_fn.downcast::<PyFunction>().unwrap();
     let result = pyfn.call1(
-        (current_state_py, signals.clone())
+        (current_state.to_object(py), signals)
     ).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(result.get_item(0).unwrap());
     let value = result.get_item(1).unwrap();
-    let value_type = value.get_type().to_string();
-    let value = PY_TO_RUST.get(value_type.as_str())
-        .expect("Unsupported python type")(value);    
     Update { key, value }
 }
 
@@ -159,25 +155,18 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
         // 1. Display sim. config.
         println!("--- SIM_CONFIG: {:?}", sim_config);
 
-        let now = std::time::Instant::now();
+        let now = std::time::Instant::now(); // Perf. diag.
+        Python::with_gil(|py| {
         // 2. Create trajectory
-        let mut trajectory = vec![cadcad_config.init_state.clone()];
+        let mut trajectory = vec![cadcad_config.init_state];
         for k in 0..sim_config.timesteps { // Experiment
             let current_state = &trajectory[k];
-            let mut new_state = State::new();
+            let new_state = State::new(py);
 
-            Python::with_gil(|py| {
             // a. Apply policies
             let signals = Signals::new(py);
-            let mut current_state_py = StatePy::new();
             for policy in &cadcad_config.policies {
-                for (key, val) in current_state {
-                    match  val { 
-                        Value::I32(i) => current_state_py.insert(key, i.to_object(py)), 
-                        Value::F64(f) => current_state_py.insert(key, f.to_object(py)),
-                    };
-                }
-                let signal = call_py_policy(policy, current_state_py.clone());
+                let signal = call_py_policy(py, policy, current_state);
                 // Todo: Add logic: Insert new signal or add to existing to support 
                 // multiple policies to be writeable for the same key
                 if signals.contains(&signal.key).unwrap() {
@@ -193,14 +182,15 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
             // b. Apply state update fns
             for state_update_fn in &cadcad_config.state_update_functions {
                 let update = call_py_state_update_fn(
-                    state_update_fn, current_state_py.clone(), &signals
+                    py, state_update_fn, current_state, &signals
                 );
-                new_state.insert(update.key, update.value);
+                let _todo = new_state.set_item(update.key, update.value);
             }
-            }); // end of py_gil
 
             trajectory.push(new_state);
         }
+
+        // x. Perf. Diag.
         let elapsed = now.elapsed();
         println!("--- End of simulation {:?}", i);
         println!("--- Simulation time: {:.2?}", elapsed);
@@ -210,6 +200,8 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
 
         // 4. Print trajectory
         if cadcad_config.print_trajectory { print_trajectory(&trajectory); }
+
+        }); // end of py_gil
     }
     println!("\n----------------------END---------------------\n");
 }
@@ -235,23 +227,14 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
             n_run: get_i32(sim_config_py, "N") as usize,
             timesteps: get_i32(sim_config_py, "T") as usize
         };
-
-        let mut init_state = State::new();
-        for (key, val) in init_state_py.iter() {
-            let key = to_string(key);
-            let val_type = val.get_type().to_string();
-            let val = PY_TO_RUST.get(val_type.as_str())
-                .expect("Unsupported python type")(val);
-            init_state.insert(key, val);
-        }
-
+        // Todo: Do not convert to vec, use as it is (PyList) ?
         let policies : Vec<&PyAny> = policies_py.iter().collect();
         let state_update_fns : Vec<&PyAny> = state_update_fns_py.iter().collect();
 
         let cadcad_config = cadCADConfig {
             name,
             sim_config,
-            init_state,
+            init_state: init_state_py,
             policies,
             state_update_functions: state_update_fns,
             print_trajectory: print_trajectory.is_true(),
