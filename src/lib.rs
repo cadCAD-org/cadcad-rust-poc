@@ -70,8 +70,8 @@ pub struct cadCADConfig<'a> {
     pub name: String,
     pub sim_config: SimConfig,
     pub init_state: &'a State,
-    pub policies: Vec<PolicyFunc<'a>>,
-    pub state_update_functions: Vec<UpdateFunc<'a>>,
+    pub policies: &'a PyList,
+    pub state_update_functions: &'a PyList,
     pub print_trajectory: bool,
 }
 
@@ -144,7 +144,7 @@ fn print_stats(trajectory: &Trajectory) {
 }
 
 // Todo: Remove unnecessary prints after POC period
-pub fn run_simulation(cadcad_config: &cadCADConfig) {
+fn run_simulation_impl(cadcad_config: &cadCADConfig) {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
     println!("----------------------------------------------");
@@ -165,7 +165,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
 
             // a. Apply policies
             let signals = Signals::new(py);
-            for policy in &cadcad_config.policies {
+            for policy in cadcad_config.policies {
                 let signal = call_py_policy(py, policy, current_state);
                 // Todo: Add logic: Insert new signal or add to existing to support 
                 // multiple policies to be writeable for the same key
@@ -180,11 +180,12 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
             }
 
             // b. Apply state update fns
-            for state_update_fn in &cadcad_config.state_update_functions {
+            for state_update_fn in cadcad_config.state_update_functions {
                 let update = call_py_state_update_fn(
                     py, state_update_fn, current_state, &signals
                 );
-                let _todo = new_state.set_item(update.key, update.value);
+                new_state.set_item(update.key, update.value)
+                    .map_err(|err| println!("{:?}", err)).ok();
             }
 
             trajectory.push(new_state);
@@ -215,7 +216,7 @@ use pyo3::types::*;
 fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
-    fn run_simulation_rs(
+    fn run_simulation(
         name: String,
         sim_config_py: &PyDict,
         init_state_py: &PyDict,
@@ -227,20 +228,16 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
             n_run: get_i32(sim_config_py, "N") as usize,
             timesteps: get_i32(sim_config_py, "T") as usize
         };
-        // Todo: Do not convert to vec, use as it is (PyList) ?
-        let policies : Vec<&PyAny> = policies_py.iter().collect();
-        let state_update_fns : Vec<&PyAny> = state_update_fns_py.iter().collect();
-
         let cadcad_config = cadCADConfig {
             name,
             sim_config,
             init_state: init_state_py,
-            policies,
-            state_update_functions: state_update_fns,
+            policies: policies_py,
+            state_update_functions: state_update_fns_py,
             print_trajectory: print_trajectory.is_true(),
         };
 
-        run_simulation(&cadcad_config);
+        run_simulation_impl(&cadcad_config);
 
         Ok(1)
     }

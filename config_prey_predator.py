@@ -51,7 +51,7 @@ state_update_fns = [
     update_predator
 ]
 
-cadcad_rs.run_simulation_rs(
+cadcad_rs.run_simulation(
   "config from python",
   sim_config,
   init_state,
