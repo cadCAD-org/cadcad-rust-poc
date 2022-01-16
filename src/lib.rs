@@ -167,8 +167,8 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
             let signals = Signals::new(py);
             for policy in cadcad_config.policies {
                 let signal = call_py_policy(py, policy, current_state);
-                // Todo: Add logic: Insert new signal or add to existing to support 
-                // multiple policies to be writeable for the same key
+                // Todo: Add logic: Insert new signal or update existing to support 
+                // multiple Python policies for the same key to be writeable 
                 if signals.contains(&signal.key).unwrap() {
                     // todo: 
                     // signals.set_item(signals.get_item(signal.key) + signal.key)
