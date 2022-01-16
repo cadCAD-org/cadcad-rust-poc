@@ -54,7 +54,7 @@ Shared lib. location:
 
 ### A. Perf. comparisons of different implementations with cadCAD.rs
 
-Comparing "the time to complete a simulation" with a sample user config. (can be seen at the end) used with different implementations:   
+Comparing "the time to complete a simulation" with a sample user config. (reference Python impl. can be seen at the end of this section) used with different implementations:   
 
 
 | Implementation                   | Time to complete a simulation |
@@ -66,7 +66,6 @@ Comparing "the time to complete a simulation" with a sample user config. (can be
 
   
 #### 1. Everything in Rust (cadCAD.rs, this repo, used as app.)
-92ms  
 - All user config. (sim_config, init_state, policies, state_update_fns) and library code (run simulation loop etc.. ) are in Rust  
 - How to experiment: 
 
@@ -76,8 +75,7 @@ cargo r --release
 ```
 
 
-#### 2. Everything in Python (my very simple Python impl.)
-285ms  
+#### 2. Everything in Python (my very simple Python impl.) 
 - All user config. (sim_config, init_state,  policies, state_update_fns) and library code (run simulation loop etc.. ) are in Python  
 - How to experiment: 
 
@@ -86,16 +84,14 @@ cd perf_tests/pure_python_impl
 python main.py
 ```
 
-#### 3. cadCAD.rs as library (this repo)  
-700ms  
+#### 3. cadCAD.rs as library (this repo)    
 - All user config. (sim_config, init_state,  policies, state_update_fns) defined in Python and passed to Rust  
 - Python policies/state update fns are called back from Rust  
 - All library code (run simulation loop etc.. ) is in Rust  
 - How to experiment: See the related section for this repo above
 
 
-#### 4. Using cadCAD python package
-12sec   
+#### 4. Using cadCAD python package   
 - https://github.com/cadCAD-org/cadCAD
 - How to experiment: 
 
