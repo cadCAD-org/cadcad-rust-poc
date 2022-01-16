@@ -14,15 +14,15 @@ Proof of Concept Rust Implementation of cadCAD
 
 ### What might be next?  
 
-- [Speed Improv.] Currently, we call-back Python policies and state update functions from Rust with the help of Pyo3 library. For better performance, we might compile Python policies and state update functions (user config.) down to a low level shared library (e.g. to C using Cython) and call them in a more performant way. 
+- [ ] [Speed Improv.] Currently, we call-back Python policies and state update functions from Rust with the help of Pyo3 library. For better performance, we might compile Python policies and state update functions (user config.) down to a low level shared library (e.g. to C using Cython) and call them in a more performant way. 
 
-- [Speed Improv.] Currently, we use dictionaries (`PyDict`) from Pyo3 library as Hashmap containers (e.g. for State and Signals ). We might use faster Hashmaps (e.g. Fxhash or even Rust std::HashMap) for faster simulation runtimes.
+- [ ] [Speed Improv.] Currently, we use dictionaries (`PyDict`) from Pyo3 library as Hashmap containers (e.g. for State and Signals ). We might use faster Hashmaps (e.g. Fxhash or even Rust std::HashMap) for faster simulation runtimes.
 
-- [All Types Support] Extend the State value type `enum Value` in `src/lib.rs` (see https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types) to support more types between Rust-Python. Currently, only int32 and float64 types are supported.
+- [ ] [All Types Support] Extend the State value type `enum Value` in `src/lib.rs` (see https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types) to support more types between Rust-Python. Currently, only int32 and float64 types are supported.
 
-- [Explore Other Solutions] Currently, we are using Pyo3 library and tools to achieve Rust-Python FFI which is the heart of the current solution, so we are potentially limited to Pyo3 capabilities/performance. We might research/experiment other options which might give us faster results.
+- [ ] [Explore Other Solutions] Currently, we are using Pyo3 library and tools to achieve Rust-Python FFI which is the heart of the current solution, so we are potentially limited to Pyo3 capabilities/performance. We might research/experiment other options which might give us faster results.
 
-- [Speed Improv.] Use single type `PyDict` for the type of State, remove `StatePy` and `StateRs` redundancy/conversion (the same already done for Signals and gave %33 speed improvement)
+- [x] [Speed Improv.] <Update: This task is done, improvement is huge, from 700ms to 270ms> Use single type `PyDict` for the type of State, remove `StatePy` and `StateRs` redundancy/conversion (the same already done for Signals and gave %33 speed improvement)
 
 ## 2. How to experiment
 
