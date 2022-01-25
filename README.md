@@ -52,10 +52,11 @@ Shared lib. location:
 
 ## 3. Performance Tests
 
-### A. Perf. comparisons of different implementations with cadCAD.rs
+### A. Perf. comparisons of different implementations with cadCAD.rs 
 
 Comparing "the time to complete a simulation" with a sample user config. (reference Python impl. can be seen at the end of this section) used with different implementations:   
 
+(The tests are done at commit https://github.com/cadCAD-org/cadcad-rust-poc/tree/142e8bba7cb56fccd6371286e7f7f43383156559)
 
 | Implementation                   | Time to complete a simulation |
 |----------------------------------|-------------------------------|
