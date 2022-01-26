@@ -15,7 +15,7 @@ print_trajectory = bool(0)
 ##
 init_state = {
     'preys'    : 2000,
-    'predators':  200.0,
+    'predators':  200.0, # This is float just to test software
 }
 
 ## Params
@@ -29,12 +29,16 @@ def prey_change_normal_conditions(state, y):
     preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
     return ( "preys_change", preys_change )
 
+def prey_pandemic(state, y):
+    return ( "preys_change", random.randint(-200, -100) )
+
 def predator_change_normal_conditions(state, y):
-    return ( "predators_change", random.uniform(-10.0, 10.0) )   
+    return ( "predators_change", random.uniform(-10.0, 10.0) )
 
 policies = [
-    prey_change_normal_conditions, 
-    predator_change_normal_conditions
+    prey_change_normal_conditions,
+    # prey_pandemic, # enable to test addable signals
+    predator_change_normal_conditions,
 ]
 
 # SUFS/Mechanisms

@@ -143,12 +143,18 @@ fn print_stats(trajectory: &Trajectory) {
     println!("--- Size of trajectory obj.: {}", std::mem::size_of_val(&*trajectory));
 }
 
-// Todo: Remove unnecessary prints after POC period
+// Todo: Refactor this fn, remove unnecessary prints after POC period
 fn run_simulation_impl(cadcad_config: &cadCADConfig) {
-    // todo: create final_data - vec of traj.s
+    Python::with_gil(|py| { // Acquires the global interpreter lock, 
+                            // allowing access to the Python interpreter.
+
     let sim_config = &cadcad_config.sim_config;
     println!("----------------------------------------------");
     println!("\n### Project: {} ...", &cadcad_config.name);
+
+    let builtins = PyModule::import(py, "builtins").unwrap();
+    let py_sum = builtins.getattr("sum").unwrap();
+
     for i in 0..sim_config.n_run { // Simulation
         println!("\n--- \n Starting simulation {} ...", i);
         println!("---");
@@ -156,7 +162,6 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
         println!("--- SIM_CONFIG: {:?}", sim_config);
 
         let now = std::time::Instant::now(); // Perf. diag.
-        Python::with_gil(|py| {
         // 2. Create trajectory
         let mut trajectory = vec![cadcad_config.init_state];
         for k in 0..sim_config.timesteps { // Experiment
@@ -167,12 +172,15 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
             let signals = Signals::new(py);
             for policy in cadcad_config.policies {
                 let signal = call_py_policy(py, policy, current_state);
-                // Todo: Add logic: Insert new signal or update existing to support 
-                // multiple Python policies for the same key to be writeable 
+                // i. Add to the existing signal (to enable multiple Python
+                //    policies for the same key writeable)
                 if signals.contains(&signal.key).unwrap() {
-                    // todo: 
-                    // signals.set_item(signals.get_item(signal.key) + signal.key)
+                    let current_val = signals.get_item(&signal.key).unwrap();
+                    let sum = py_sum.call1( ((current_val, signal.value),) ).unwrap();
+                    signals.set_item(&signal.key, sum)
+                        .map_err(|err| println!("{:?}", err)).ok();
                 }
+                // ii. Insert a new signal
                 else {
                     signals.set_item(&signal.key, signal.value)
                         .map_err(|err| println!("{:?}", err)).ok();
@@ -191,6 +199,8 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
             trajectory.push(new_state);
         }
 
+        // Todo: create final_data - vec of traj.s
+
         // x. Perf. Diag.
         let elapsed = now.elapsed();
         println!("--- End of simulation {:?}", i);
@@ -202,9 +212,9 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
         // 4. Print trajectory
         if cadcad_config.print_trajectory { print_trajectory(&trajectory); }
 
-        }); // end of py_gil
     }
     println!("\n----------------------END---------------------\n");
+    }); // end of py_gil
 }
 
 // ----------------------------------- pyo3 binding -------------------------------- //
