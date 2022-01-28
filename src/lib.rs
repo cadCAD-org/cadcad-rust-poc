@@ -152,8 +152,8 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
     println!("----------------------------------------------");
     println!("\n### Project: {} ...", &cadcad_config.name);
 
-    let builtins = PyModule::import(py, "builtins").unwrap();
-    let py_sum = builtins.getattr("sum").unwrap();
+    let module = PyModule::import(py, "operator").unwrap();
+    let py_add = module.getattr("add").unwrap();
 
     for i in 0..sim_config.n_run { // Simulation
         println!("\n--- \n Starting simulation {} ...", i);
@@ -176,7 +176,7 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
                 //    policies for the same key writeable)
                 if signals.contains(&signal.key).unwrap() {
                     let current_val = signals.get_item(&signal.key).unwrap();
-                    let sum = py_sum.call1( ((current_val, signal.value),) ).unwrap();
+                    let sum = py_add.call1( (current_val, signal.value) ).unwrap();
                     signals.set_item(&signal.key, sum)
                         .map_err(|err| println!("{:?}", err)).ok();
                 }
