@@ -32,8 +32,10 @@ Install Rust: https://www.rust-lang.org/tools/install
 pip install virtualenv
 git clone https://github.com/cadCAD-org/cadcad-rust-poc.git
 cd cadcad-rust-poc
-virtualenv --python python3.9 venv
+virtualenv --python python3.9 venv 
+    // Windows: virtualenv env
 source venv/bin/activate // or 'deactivate' when needed
+    // Windows: env\Scripts\activate
 pip install maturin
 ```
 
@@ -63,7 +65,7 @@ Comparing "the time to complete a simulation" with a sample user config. (refere
 | 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as an app.)               | ~70 ms                         |
 | 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | ~250 ms                        |
 | 3. cadCAD.rs as library <br /> &nbsp;&nbsp;&nbsp; (this repo, unoptimized) | ~250 ms (improved, previously ~700 ms)            |
-| 4. Using cadCAD python package      | ~10.8 sec                        |
+| 4. Using cadCAD python package (v0.3.1)      | ~10.8 sec                        |
 
   
 #### 1. Everything in Rust (cadCAD.rs, this repo, used as app.)
