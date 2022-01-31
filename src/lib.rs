@@ -163,10 +163,10 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
         let now = std::time::Instant::now(); // Perf. diag.
         // 2. Create trajectory
         let init_state = cadcad_config.init_state;
-        init_state.set_item("run", i+1);
-        init_state.set_item("substep", 0);
-        init_state.set_item("timestep", 0);        
         let mut trajectory = vec![init_state];
+        let _todo = init_state.set_item("run", i+1);
+        let _todo = init_state.set_item("substep", 0);
+        let _todo = init_state.set_item("timestep", 0);
         for k in 0..sim_config.timesteps { // Experiment
             let current_state = &trajectory[k];
             let new_state = State::new(py);
@@ -199,9 +199,9 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
                     .map_err(|err| println!("{:?}", err)).ok();
             }
 
-            new_state.set_item("run", i+1);
-            new_state.set_item("substep", 1);
-            new_state.set_item("timestep", k+1);
+            let _todo = new_state.set_item("run", i+1);
+            let _todo = new_state.set_item("substep", 1);
+            let _todo = new_state.set_item("timestep", k+1);
             trajectory.push(new_state);
         }
 
