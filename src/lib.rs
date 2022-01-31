@@ -143,17 +143,19 @@ fn print_stats(trajectory: &Trajectory) {
 }
 
 // Todo: Refactor this fn, remove unnecessary prints after POC period
-fn run_simulation_impl(cadcad_config: &cadCADConfig) {
-    Python::with_gil(|py| { // Acquires the global interpreter lock, 
-                            // allowing access to the Python interpreter.
+fn run_simulation_impl(cadcad_config: &cadCADConfig) -> Vec<Vec<PyObject>> {
+    let gil = Python::acquire_gil(); // Acquires the global interpreter lock, 
+    let py = gil.python();           // allowing access to the Python interpreter.
 
     let sim_config = &cadcad_config.sim_config;
-    println!("----------------------------------------------");
+    println!("\n----------------------------------------------");
     println!("\n### Project: {} ...", &cadcad_config.name);
 
     let module = PyModule::import(py, "operator").unwrap();
     let py_add = module.getattr("add").unwrap();
 
+    // Final/result data set of simulation
+    let mut result_data = Vec::<Vec<PyObject>>::new();
     for i in 0..sim_config.n_run { // Simulation
         println!("\n--- \n Starting simulation {} ...", i);
         println!("---");
@@ -166,7 +168,9 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
         let mut trajectory = vec![init_state];
         let _todo = init_state.set_item("run", i+1);
         let _todo = init_state.set_item("substep", 0);
-        let _todo = init_state.set_item("timestep", 0);
+        let _todo = init_state.set_item("timestep", 0);        
+        let mut trajectory_of_state_ptrs = vec![init_state.copy().unwrap().into()];
+
         for k in 0..sim_config.timesteps { // Experiment
             let current_state = &trajectory[k];
             let new_state = State::new(py);
@@ -203,9 +207,8 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
             let _todo = new_state.set_item("substep", 1);
             let _todo = new_state.set_item("timestep", k+1);
             trajectory.push(new_state);
+            trajectory_of_state_ptrs.push(new_state.into());
         }
-
-        // Todo: create final_data - vec of traj.s
 
         // x. Perf. Diag.
         let elapsed = now.elapsed();
@@ -218,9 +221,11 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
         // 4. Print trajectory
         if cadcad_config.print_trajectory { print_trajectory(&trajectory); }
 
+        result_data.push(trajectory_of_state_ptrs);
     }
-    println!("\n----------------------END---------------------\n");
-    }); // end of py_gil
+    println!("\n------------------ END of Simulation ---------------------\n");
+
+    result_data
 }
 
 // ----------------------------------- pyo3 binding -------------------------------- //
@@ -239,7 +244,7 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
         policies_py: &PyList,
         state_update_fns_py: &PyList,
         print_trajectory: &PyBool
-    ) -> PyResult<i32> {
+    ) -> PyResult<Vec::<Vec<PyObject>>> {
         let sim_config = SimConfig { 
             n_run: get_i32(sim_config_py, "N") as usize,
             timesteps: get_i32(sim_config_py, "T") as usize
@@ -253,9 +258,8 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
             print_trajectory: print_trajectory.is_true(),
         };
 
-        run_simulation_impl(&cadcad_config);
-
-        Ok(1)
+        let result_data = run_simulation_impl(&cadcad_config);
+        Ok(result_data)
     }
 
     Ok(())

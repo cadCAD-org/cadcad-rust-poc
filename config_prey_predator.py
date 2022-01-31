@@ -55,7 +55,7 @@ state_update_fns = [
     update_predator
 ]
 
-cadcad_rs.run_simulation(
+result_data = cadcad_rs.run_simulation(
   "config from python",
   sim_config,
   init_state,
@@ -63,3 +63,13 @@ cadcad_rs.run_simulation(
   state_update_fns,
   print_trajectory
 )
+
+## Optional: Print result_data
+print_result = 0
+if print_result:
+  print("Result data:")
+  print("------------")
+  for trajectory in result_data:
+    print("---")
+    for state in trajectory:
+        print(state)
