@@ -76,11 +76,11 @@ pub struct cadCADConfig<'a> {
 }
 
 pub fn call_py_policy<'a>(
-    py: Python, policy: &'a PyAny, current_state: &State
+    policy: &'a PyAny, current_state: &State
 ) -> Signal<'a> {
     let pyPolicy = policy.downcast::<PyFunction>().unwrap();
     let result = pyPolicy.call1(
-        (current_state.to_object(py), 0)
+        (current_state, 0)
     ).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(result.get_item(0).unwrap());
     let value = result.get_item(1).unwrap();  
@@ -88,14 +88,13 @@ pub fn call_py_policy<'a>(
 }
 
 pub fn call_py_state_update_fn<'a>(
-    py: Python,
     state_update_fn: &'a PyAny,
     current_state: &State,
     signals: &Signals
 ) -> Update<'a> {
     let pyfn = state_update_fn.downcast::<PyFunction>().unwrap();
     let result = pyfn.call1(
-        (current_state.to_object(py), signals)
+        (current_state, signals)
     ).unwrap().downcast::<PyTuple>().unwrap();
     let key = to_string(result.get_item(0).unwrap());
     let value = result.get_item(1).unwrap();
@@ -171,7 +170,7 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
             // a. Apply policies
             let signals = Signals::new(py);
             for policy in cadcad_config.policies {
-                let signal = call_py_policy(py, policy, current_state);
+                let signal = call_py_policy(policy, current_state);
                 // i. Add to the existing signal (to enable multiple Python
                 //    policies for the same key writeable)
                 if signals.contains(&signal.key).unwrap() {
@@ -190,7 +189,7 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) {
             // b. Apply state update fns
             for state_update_fn in cadcad_config.state_update_functions {
                 let update = call_py_state_update_fn(
-                    py, state_update_fn, current_state, &signals
+                    state_update_fn, current_state, &signals
                 );
                 new_state.set_item(update.key, update.value)
                     .map_err(|err| println!("{:?}", err)).ok();
