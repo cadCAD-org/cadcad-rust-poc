@@ -1,49 +1,17 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-use std::{usize};
-use std::ops::Add;
-extern crate lazy_static;
-
 //// Improvements:
 // Todo: Pre-allocate memory before everything (e.g. n_run * timesteps * sizeof State)
 // Todo: Remove unnecessary "pub"s
 // Todo: Remove unnecessary prints after POC period
 
-// State Value Type
-#[derive(Debug, Clone, Copy)]
-pub enum Value {
-    I32(i32),
-    F64(f64),
-    // ... this can be extended: https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types
-}
-
-impl Add for Value {
-    type Output = Self;
-    fn add(self, other: Self) -> Self {
-        return match self {
-            Self::I32(val) => {
-                match other {
-                    Self::I32(val_other) => Self::I32(val + val_other),
-                    Self::F64(_) => panic!("-- Cannot add different enum types"),
-                }
-            },
-            Self::F64(val) => {
-                match other {
-                    Self::I32(_) => panic!("-- Cannot add different enum types"),
-                    Self::F64(val_other) => Self::F64(val + val_other),
-                }
-            }
-        };
-    }
-}
-
 // Type Defs.
 pub type State = PyDict;
 pub type Trajectory<'a> = Vec<&'a State>;
+pub type Signals = PyDict;
 pub type UpdateFunc<'a> = &'a PyAny;
 pub type PolicyFunc<'a> = &'a PyAny;
-pub type Signals = PyDict;
 
 #[derive(Debug)]
 pub struct SimConfig { 
@@ -110,24 +78,9 @@ fn to_i32(any: &PyAny) -> i32 {
     any.downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
 }
 
-fn to_f64(any: &PyAny) -> f64 {
-    any.downcast::<PyFloat>().unwrap().extract::<f64>().unwrap()
-}
-
 fn to_string(any: &PyAny) -> String {
     any.downcast::<PyString>().unwrap().extract::<String>().unwrap()
 }
-
-fn to_value_i32(any: &PyAny) -> Value { Value::I32(to_i32(any)) }
-fn to_value_f64(any: &PyAny) -> Value { Value::F64(to_f64(any)) }
-
-// Python Rust type conversion map
-type ToValueFn = for<'r> fn(&'r pyo3::PyAny) -> Value;
-static PY_TO_RUST: phf::Map<&'static str, ToValueFn> = phf::phf_map! {
-    "<class 'int'>"   => to_value_i32,
-    "<class 'float'>" => to_value_f64,
-    // ... this can be extended: https://pyo3.rs/v0.15.1/conversions/tables.html#argument-types
-};
 
 fn print_trajectory(trajectory: &Trajectory) {
     println!("--- Trajectory:");
@@ -142,12 +95,23 @@ fn print_stats(trajectory: &Trajectory) {
     println!("--- Size of trajectory obj.: {}", std::mem::size_of_val(&*trajectory));
 }
 
+fn add_additional_init_state_keys(init_state: &State, i: usize) {
+    let _todo = init_state.set_item("run", i+1);
+    let _todo = init_state.set_item("substep", 0);
+    let _todo = init_state.set_item("timestep", 0);
+}
+
+fn add_additional_new_state_keys(new_state: &State, i: usize, k: usize) {
+    let _todo = new_state.set_item("run", i+1);
+    let _todo = new_state.set_item("substep", 1);
+    let _todo = new_state.set_item("timestep", k+1);
+}
+
 // Todo: Refactor this fn, remove unnecessary prints after POC period
 fn run_simulation_impl(cadcad_config: &cadCADConfig) -> Vec<Vec<PyObject>> {
     let gil = Python::acquire_gil(); // Acquires the global interpreter lock, 
     let py = gil.python();           // allowing access to the Python interpreter.
 
-    let sim_config = &cadcad_config.sim_config;
     println!("\n----------------------------------------------");
     println!("\n### Project: {} ...", &cadcad_config.name);
 
@@ -156,6 +120,7 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) -> Vec<Vec<PyObject>> {
 
     // Final/result data set of simulation
     let mut result_data = Vec::<Vec<PyObject>>::new();
+    let sim_config = &cadcad_config.sim_config;
     for i in 0..sim_config.n_run { // Simulation
         println!("\n--- \n Starting simulation {} ...", i);
         println!("---");
@@ -166,9 +131,7 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) -> Vec<Vec<PyObject>> {
         // 2. Create trajectory
         let init_state = cadcad_config.init_state;
         let mut trajectory = vec![init_state];
-        let _todo = init_state.set_item("run", i+1);
-        let _todo = init_state.set_item("substep", 0);
-        let _todo = init_state.set_item("timestep", 0);        
+        add_additional_init_state_keys(init_state, i);
         let mut trajectory_of_state_ptrs = vec![init_state.copy().unwrap().into()];
 
         for k in 0..sim_config.timesteps { // Experiment
@@ -203,14 +166,12 @@ fn run_simulation_impl(cadcad_config: &cadCADConfig) -> Vec<Vec<PyObject>> {
                     .map_err(|err| println!("{:?}", err)).ok();
             }
 
-            let _todo = new_state.set_item("run", i+1);
-            let _todo = new_state.set_item("substep", 1);
-            let _todo = new_state.set_item("timestep", k+1);
+            add_additional_new_state_keys(new_state, i, k);
             trajectory.push(new_state);
             trajectory_of_state_ptrs.push(new_state.into());
         }
 
-        // x. Perf. Diag.
+        // x. Perf. Diagnostics
         let elapsed = now.elapsed();
         println!("--- End of simulation {:?}", i);
         println!("--- Simulation time: {:.2?}", elapsed);
