@@ -49,6 +49,7 @@ def fib1(n: int) -> int:
         return n
     else:
         return fib1(n - 2) + fib1(n - 1)
+
 # NOT using type hints
 def fib2(n):
     if n <= 1:
