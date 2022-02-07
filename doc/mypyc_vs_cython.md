@@ -1,8 +1,8 @@
 
 # Mypyc vs Cython
 
-https://github.com/mypyc/mypyc  
-https://cython.readthedocs.io/en/latest/src/quickstart/overview.html  
+Mypyc: https://github.com/mypyc/mypyc   
+Cython: https://cython.readthedocs.io/en/latest/src/quickstart/overview.html   
 
 ## 1. Intro
 
@@ -12,7 +12,10 @@ https://cython.readthedocs.io/en/latest/src/quickstart/overview.html
 
 
 ### Key Differences:  
-- Cython is a language, super set of Python. Mypyc is not.
+
+- Mypyc is currently alpha software (first appeared 2017?). Cython is a 14-years old project (first appeared 2007).
+
+- Cython is a language, super set of Python. Mypyc is not and does not introduce a new lanugage.
 
 - Cython requires using special types (e.g. cdef int x=0) in its annotations. Mypyc does not require special types, uses standard Python type hints to generate fast code. Mypyc also uses mypy to perform type checking and type inference.
 
