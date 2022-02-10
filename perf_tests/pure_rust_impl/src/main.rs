@@ -35,6 +35,7 @@ fn create_config() -> cadCADConfig<'static> {
         init_state,
         policies: &[
             prey_change_normal_conditions,
+            prey_pandemic, // enable this to test addable signals
             predator_change_normal_conditions
         ],
         state_key_and_update_fn_s: &[
@@ -45,10 +46,25 @@ fn create_config() -> cadCADConfig<'static> {
     }
 }
 
+// Params
+const MAX_PREYS: i32 = 3000;
+
 // Policies
-fn prey_change_normal_conditions(_state: &State) -> Signal {
+fn prey_change_normal_conditions(state: &State) -> Signal {
+    let mut preys = 0;
+    if let Value::I32(val) =  state["preys"] {
+        preys = val
+    }
     let mut random = rand::thread_rng();
-    let preys_change = random.gen_range(-100..100);
+    // Assuming: preys_change goes down with every iteration since
+    // natural resources limits the number of preys to MAX_PREYS 
+    let preys_change = if preys < MAX_PREYS { random.gen_range(0..MAX_PREYS-preys) } else { 0 };
+    Signal { key: "preys_change".to_string(), value: Value::I32(preys_change) }
+}
+
+fn prey_pandemic(_state: &State) -> Signal {   
+    let mut random = rand::thread_rng();
+    let preys_change = random.gen_range(-800..-700);
     Signal { key: "preys_change".to_string(), value: Value::I32(preys_change) }
 }
 
