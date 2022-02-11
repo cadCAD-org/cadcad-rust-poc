@@ -58,14 +58,14 @@ Shared lib. location:
 
 Comparing "the time to complete a simulation" with a sample user config. (reference Python impl. can be seen at the end of this section) used with different implementations:   
 
-(The tests are done at commit https://github.com/cadCAD-org/cadcad-rust-poc/tree/142e8bba7cb56fccd6371286e7f7f43383156559)
+(The tests are done at commit ...todo)
 
 | Implementation                   | Time to complete a simulation |
 |----------------------------------|-------------------------------|
-| 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as an app.)               | ~70 ms                         |
-| 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | ~250 ms                        |
-| 3. cadCAD.rs as library <br /> &nbsp;&nbsp;&nbsp; (this repo, unoptimized) | ~250 ms (improved, previously ~700 ms)            |
-| 4. Using cadCAD python package (v0.3.1)      | ~10.8 sec                        |
+| 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as an app.)               | ~84 ms                         |
+| 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | ~639 ms                        |
+| 3. cadCAD.rs as library <br /> &nbsp;&nbsp;&nbsp; (this repo, unoptimized) | ~680 ms            |
+| 4. Using cadCAD python package (v0.3.1)      | ~10.9 sec                        |
 
   
 #### 1. Everything in Rust (cadCAD.rs, this repo, used as app.)
