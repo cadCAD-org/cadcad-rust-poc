@@ -10,6 +10,7 @@ use std::ops::Add;
 pub enum Value {
     I32(i32),
     F64(f64),
+    USIZE(usize),
 }
 
 impl Add for Value {
@@ -20,14 +21,23 @@ impl Add for Value {
                 match other {
                     Self::I32(val_other) => Self::I32(val + val_other),
                     Self::F64(_) => panic!("-- Cannot add different enum types"),
+                    Self::USIZE(_) => panic!("-- Cannot add different enum types"),
                 }
             },
             Self::F64(val) => {
                 match other {
                     Self::I32(_) => panic!("-- Cannot add different enum types"),
                     Self::F64(val_other) => Self::F64(val + val_other),
+                    Self::USIZE(_) => panic!("-- Cannot add different enum types"),
                 }
             }
+            Self::USIZE(val) => {
+                match other {
+                    Self::I32(_) => panic!("-- Cannot add different enum types"),
+                    Self::F64(_) => panic!("-- Cannot add different enum types"),
+                    Self::USIZE(val_other) => Self::USIZE(val + val_other),
+                }
+            }            
         };
     }
 }
@@ -80,6 +90,18 @@ fn print_trajectory(trajectory: &Trajectory) {
     }
 }
 
+fn add_additional_init_state_keys(init_state: &mut State, i: usize) {
+    let _todo = init_state.insert("run".to_string(), Value::USIZE(i+1));
+    let _todo = init_state.insert("substep".to_string(), Value::USIZE(0));
+    let _todo = init_state.insert("timestep".to_string(), Value::USIZE(0));
+}
+
+fn add_additional_new_state_keys(new_state: &mut State, i: usize, k: usize) {
+    let _todo = new_state.insert("run".to_string(), Value::USIZE(i+1));
+    let _todo = new_state.insert("substep".to_string(), Value::USIZE(1));
+    let _todo = new_state.insert("timestep".to_string(), Value::USIZE(k+1));
+}
+
 pub fn run_simulation(cadcad_config: &cadCADConfig) {
     // todo: create final_data - vec of traj.s
     let sim_config = &cadcad_config.sim_config;
@@ -93,7 +115,9 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
 
         let now = std::time::Instant::now();
         // 2. Create trajectory
-        let mut trajectory = vec![cadcad_config.init_state.clone()];
+        let mut init_state = cadcad_config.init_state.clone();
+        add_additional_init_state_keys(&mut init_state, i);
+        let mut trajectory = vec![init_state];
         for k in 0..sim_config.timesteps { // Experiment
             let current_state = &trajectory[k];
             let mut new_state = State::new();
@@ -115,6 +139,7 @@ pub fn run_simulation(cadcad_config: &cadCADConfig) {
                 let update = (key_and_update_fn.update_func)(current_state, &signals);
                 new_state.insert(update.key, update.value);
             }
+            add_additional_new_state_keys(&mut new_state, i, k);
 
             trajectory.push(new_state);
         }

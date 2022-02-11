@@ -23,21 +23,21 @@ MAX_PREYS = 3000
 
 ## Policies
 def prey_change_normal_conditions(state, y):
-    preys =  state['preys']
+    preys =  state['preys']    
     # Assuming: preys_change goes down with every iteration since
     # natural resources limits the number of preys to MAX_PREYS 
     preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
     return ( "preys_change", preys_change )
 
 def prey_pandemic(state, y):
-    return ( "preys_change", random.randint(-200, -100) )
+    return ( "preys_change", random.randint(-800, -700) )
 
 def predator_change_normal_conditions(state, y):
     return ( "predators_change", random.uniform(-10.0, 10.0) )
 
 policies = [
     prey_change_normal_conditions,
-    # prey_pandemic, # enable to test addable signals
+    prey_pandemic, # enable to test addable signals
     predator_change_normal_conditions,
 ]
 

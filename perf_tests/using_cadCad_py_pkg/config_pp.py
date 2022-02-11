@@ -23,6 +23,9 @@ def prey_change_normal_conditions(_g, step, sL, state):
     preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
     return ( {"preys_change": preys_change} )
 
+def prey_pandemic(_g, step, sL, state):
+    return ( {"preys_change": random.randint(-800, -700)} )
+
 def predator_change_normal_conditions(_g, step, sL, state):
     return ( {"predators_change": random.uniform(-10.0, 10.0)} )
 
@@ -46,6 +49,7 @@ mechanisms = [
     { 
         'policies': {
             'preys_change': prey_change_normal_conditions,
+            'preys_change': prey_pandemic, # enable to test addable signals
             'predators_change': predator_change_normal_conditions
         },
         'variables': { # The following state variables will be updated simultaneously
