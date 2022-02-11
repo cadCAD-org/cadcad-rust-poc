@@ -109,53 +109,76 @@ All implementations above used this user config:
 (Note: Pure Rust impl. uses Rust version of this config).
 
 ```py
+import cadcad_rs, random
+
 ##
 sim_config = {
     'T': 100_000,  # timesteps
-    'N': 1,   # times the simulation will be run (Monte Carlo runs)
+    'N': 1,    # times the simulation will be run (Monte Carlo runs)
 }
 
 ##
 init_state = {
     'preys'    : 2000,
-    'predators':  200.0,
+    'predators':  200.0, # This is float just to test software
 }
 
 ## Params
 MAX_PREYS = 3000
 
 ## Policies
-def prey_change_normal_conditions(state):
-    preys =  state['preys']
+def prey_change_normal_conditions(state, y):
+    preys =  state['preys']    
     # Assuming: preys_change goes down with every iteration since
     # natural resources limits the number of preys to MAX_PREYS 
     preys_change = random.randint(0, MAX_PREYS-preys) if preys < MAX_PREYS else 0
-    return ( { "preys_change": preys_change } )
+    return ( "preys_change", preys_change )
 
-def predator_change_normal_conditions(state):
-    return ( { "predators_change": random.uniform(-10.0, 10.0) } )
+def prey_pandemic(state, y):
+    return ( "preys_change", random.randint(-800, -700) )
+
+def predator_change_normal_conditions(state, y):
+    return ( "predators_change", random.uniform(-10.0, 10.0) )
+
+policies = [
+    prey_change_normal_conditions,
+    prey_pandemic, # enable to test addable signals
+    predator_change_normal_conditions,
+]
 
 # SUFS/Mechanisms
-def update_prey(s, _input):
-    preys = s['preys'] + _input['preys_change']
+def update_prey(state, signals):
+    preys = state['preys'] + signals['preys_change']
     return ('preys', preys)
 
-def update_predator(s, _input):
-    predators = s['predators'] + _input['predators_change']
-    return ('predators', predators) 
+def update_predator(state, signals):
+    predators = state['predators'] + signals['predators_change']
+    return ('predators', predators)
+
+state_update_fns = [
+    update_prey,
+    update_predator
+]
+
+result_data = cadcad_rs.run_simulation(
+  "config from python",
+  sim_config,
+  init_state,
+  policies,
+  state_update_fns,
+  print_trajectory
+)
 ```   
+Src: https://github.com/cadCAD-org/cadcad-rust-poc/blob/4ced05351dd73078f3e785ce9d68466c3159c978/config_prey_predator.py
     
 Sample trajectory:		
 ```
-{'preys': 2000, 'predators': 200.0}
-{'preys': 2689, 'predators': 197.8061101157223}
-{'preys': 2905, 'predators': 202.0033859231905}
-{'preys': 2968, 'predators': 200.34499591706904}
-{'preys': 2978, 'predators': 198.70585863272157}
-{'preys': 2997, 'predators': 202.87972085498492}
-{'preys': 3000, 'predators': 211.94531269176548}
-{'preys': 3000, 'predators': 216.98291706699413}
-{'preys': 3000, 'predators': 216.41763190811685} 
+State {'preys': 2000, 'predators': 200.0, 'run': 1, 'substep': 0, 'timestep': 0}
+State {'preys': 2689, 'predators': 197.8061101157223, 'run': 1, 'substep': 1, 'timestep': 1}
+State {'preys': 2905, 'predators': 202.0033859231905, 'run': 1, 'substep': 1, 'timestep': 2}
+State {'preys': 2968, 'predators': 200.34499591706904, 'run': 1, 'substep': 1, 'timestep': 3}
+State {'preys': 2978, 'predators': 198.70585863272157, 'run': 1, 'substep': 1, 'timestep': 4}
+...
 ```
 
 ### B. Perf. compared - with and without pre-allocation:
