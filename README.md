@@ -58,7 +58,7 @@ Shared lib. location:
 
 Comparing "the time to complete a simulation" with a sample user config. (reference Python impl. can be seen at the end of this section) used with different implementations:   
 
-(The tests are done at commit ...todo)
+(The tests are done at commit https://github.com/cadCAD-org/cadcad-rust-poc/tree/4ced05351dd73078f3e785ce9d68466c3159c978)
 
 | Implementation                   | Time to complete a simulation |
 |----------------------------------|-------------------------------|
