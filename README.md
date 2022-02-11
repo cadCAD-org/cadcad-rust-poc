@@ -64,7 +64,7 @@ Comparing "the time to complete a simulation" with a sample user config. (refere
 |----------------------------------|-------------------------------|
 | 1. Everything in Rust <br/> &nbsp;&nbsp;&nbsp; (cadCAD.rs, this repo, used as an app.)               | ~84 ms                         |
 | 2. Everything in Python <br /> &nbsp;&nbsp;&nbsp; (my very simple Python impl.)            | ~639 ms                        |
-| 3. cadCAD.rs as library <br /> &nbsp;&nbsp;&nbsp; (this repo, unoptimized) | ~680 ms            |
+| 3. cadCAD.rs as library <br /> &nbsp;&nbsp;&nbsp; (this repo, unoptimized) | ~680 ms <- This Repo           |
 | 4. Using cadCAD python package (v0.3.1)      | ~10.9 sec                        |
 
   
