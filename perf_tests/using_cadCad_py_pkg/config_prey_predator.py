@@ -8,7 +8,8 @@ from cadCAD.configuration.utils import config_sim
 import random
 
 sim_config = config_sim({
-    'T': range(100_000), # number of discrete iterations in each experiement
+    'T': range(100_000), # number of discrete iterations in each experiment
+    # 'T': range(10), # number of discrete iterations in each experiment
     'N': 1, # number of times the simulation will be run (Monte Carlo runs)
 })
 

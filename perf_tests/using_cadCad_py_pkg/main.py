@@ -1,6 +1,6 @@
 
 from cadCAD.engine import ExecutionMode, ExecutionContext, Executor
-import config_pp
+import config_prey_predator
 from cadCAD import configs
 import time
 
