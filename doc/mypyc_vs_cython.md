@@ -13,17 +13,22 @@ Cython: https://cython.readthedocs.io/en/latest/src/quickstart/overview.html
 
 ### Key Differences:  
 
-- Mypyc is currently alpha software (first appeared 2017?). Cython is a 14-years old project (first appeared 2007).
+- Mypyc is currently alpha software (first appeared 2017?). Cython is a 14-years old project (first appeared 2007). More: https://github.com/mypyc/mypyc#differences-from-cython
 
 - Cython is a language, super set of Python. Mypyc is not and does not introduce a new lanugage.
 
 - Cython requires using special types (e.g. cdef int x=0) in its annotations. Mypyc does not require special types, uses standard Python type hints to generate fast code. Mypyc also uses mypy to perform type checking and type inference.
 
 - Mypyc aims to be compatible with the standard Python type annotations and still be able to optimize them. So in theory, you don’t need to modify your existing type-annotated program.
- 
 
 More:   
 https://mypyc.readthedocs.io/en/latest/introduction.html#differences-from-cython
+
+### Limitations: 
+
+- [CYTHON]: Cython uses syntax which is hugely influenced by Python 2.6. Cython is yet to support all Python 3.x features. Other limitations: https://cython.readthedocs.io/en/stable/src/userguide/limitations.html
+
+- [MYPYC]: Mypyc is currently alpha software. It's only recommended for production use cases with careful testing, and if you are willing to contribute fixes or to work around issues you will encounter.
 
 
 ### High-level Overview of Mypyc
