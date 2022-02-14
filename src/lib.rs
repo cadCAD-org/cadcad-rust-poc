@@ -70,12 +70,12 @@ pub fn call_py_state_update_fn<'a>(
 }
 
 // Pyo3 utility fns.
-fn get_i32(dic: &PyDict, key: &str) -> i32 {
-    to_i32(dic.get_item(key).unwrap())
+fn get_usize(dic: &PyDict, key: &str) -> usize {
+    to_usize(dic.get_item(key).unwrap())
 }
 
-fn to_i32(any: &PyAny) -> i32 {
-    any.downcast::<PyInt>().unwrap().extract::<i32>().unwrap()
+fn to_usize(any: &PyAny) -> usize {
+    any.downcast::<PyInt>().unwrap().extract::<usize>().unwrap()
 }
 
 fn to_string(any: &PyAny) -> String {
@@ -207,8 +207,8 @@ fn cadcad_rs(_py: Python, m: &PyModule) -> PyResult<()> {
         print_trajectory: &PyBool
     ) -> PyResult<Vec::<Vec<PyObject>>> {
         let sim_config = SimConfig { 
-            n_run: get_i32(sim_config_py, "N") as usize,
-            timesteps: get_i32(sim_config_py, "T") as usize
+            n_run: get_usize(sim_config_py, "N"),
+            timesteps: get_usize(sim_config_py, "T")
         };
         let cadcad_config = cadCADConfig {
             name,
