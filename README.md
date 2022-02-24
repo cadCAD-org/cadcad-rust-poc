@@ -44,8 +44,15 @@ Build and Run
 // From project root
 cd <project_root>
 maturin develop // debug build 
-maturin develop --release // release build
+maturin develop --release // release build 
+    // this cmd also creates `target/wheels/cadcad_rs-0.1.0-*-win_amd64.whl`
 python3 config_prey_predator.py // run
+```
+
+Using cadcad_rs without virtual env. 
+```
+// This will install cadcad_rs in global Python scope
+pip install target/wheels/cadcad_rs-0.1.0-*-win_amd64.whl
 ```
 
 Shared lib. location:  
